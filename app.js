@@ -6,6 +6,7 @@ process.env.DEBUG = 'actions-on-google:*';
 let App = require('actions-on-google').DialogflowApp;
 let express = require('express');
 let bodyParse = require('body-parser');
+let sprintf = require('sprintf-js').sprintf;
 
 let app = express();
 app.set('port', (process.env.PORT || 8080));
