@@ -57,6 +57,8 @@ var server = app.listen(app.get('port'), function () {
     console.log('App host %s', server.address().address);
     console.log('App listening on port %s', server.address().port);
     console.log('Press Ctrl+C to quit.');
+
+    console.log(sprintf("hello %s", "123113"));
 });
 
 
