@@ -12,6 +12,8 @@ let app = express();
 app.set('port', (process.env.PORT || 8080));
 app.use(bodyParse.json({ type: 'application/json' }));
 
+const MIN = 0;
+const MAX = 100;
 
 const GREETING_PROMPTS = ["Let's play Number Genie.", "Welcome to Number Genie!"];
 const INVOCATION_PROMPT = ["I\'m thinking of a number from %s and %s. What's your first guess?"];
@@ -90,7 +92,8 @@ function generateAnswer(app) {
     app.data.answer = answer;
     app.data.guessCount = 0;
     app.data.fallbackCount = 0;
-    app.ask(sprintf(sprintf(getRandomPrompt(app, GREETING_PROMPTS), guess) + ' ' + getRandomPrompt(app, INVOCATION_PROMPT), MIN, MAX));
+    app.ask(sprintf(getRandomPrompt(app, GREETING_PROMPTS) + ' ' 
+    + getRandomPrompt(app, INVOCATION_PROMPT), MIN, MAX));
 }
 
 function checkGuess(app) {
