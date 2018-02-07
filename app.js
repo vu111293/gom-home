@@ -43,14 +43,14 @@ app.post('/', function (request, response) {
 
 });
 
-app.get('/', function (request, response) {
-    console.log('header: ' + JSON.stringify(request.headers));
-    console.log('body: ' + JSON.stringify(response.body));
+// app.get('/', function (request, response) {
+//     console.log('header: ' + JSON.stringify(request.headers));
+//     console.log('body: ' + JSON.stringify(response.body));
 
-    const app = new App({ request: request, response: response });
-    // response.sendStatus(200); // reponse OK
-    app.handleRequest(actionMap);
-});
+//     const app = new App({ request: request, response: response });
+//     // response.sendStatus(200); // reponse OK
+//     app.handleRequest(actionMap);
+// });
 
 // Start the server
 var server = app.listen(app.get('port'), function () {
@@ -66,13 +66,31 @@ function getRandomNumber(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+// Utility function to pick prompts
+function getRandomPrompt (app, array) {
+    let lastPrompt = app.data.lastPrompt;
+    let prompt;
+    if (lastPrompt) {
+      for (let index in array) {
+        prompt = array[index];
+        if (prompt != lastPrompt) {
+          break;
+        }
+      }
+    } else {
+      prompt = array[Math.floor(Math.random() * (array.length))];
+    }
+    return prompt;
+  }
+  
+
 function generateAnswer(app) {
     console.log('generateAnswer');
     var answer = getRandomNumber(0, 100);
     app.data.answer = answer;
     app.data.guessCount = 0;
     app.data.fallbackCount = 0;
-    app.ask(sprintf(sprintf(getRandomPrompt(GREETING_PROMPTS), guess) + ' ' + getRandomPrompt(INVOCATION_PROMPT), MIN, MAX));
+    app.ask(sprintf(sprintf(getRandomPrompt(app, GREETING_PROMPTS), guess) + ' ' + getRandomPrompt(app, INVOCATION_PROMPT), MIN, MAX));
 }
 
 function checkGuess(app) {
