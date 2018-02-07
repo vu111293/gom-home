@@ -8,12 +8,20 @@ let express = require('express');
 let bodyParse = require('body-parser');
 let sprintf = require('sprintf-js').sprintf;
 
+// net lib
+let rxhttp = require('rx-http-request').RxHttpRequest;
+
+// firebase lib
+let firebase = require('firebase-admin');
+
 let app = express();
 app.set('port', (process.env.PORT || 8080));
 app.use(bodyParse.json({ type: 'application/json' }));
 
 const MIN = 0;
 const MAX = 100;
+
+const HOST_IOT = 'http://mhome-showroom.ddns.net/api';
 
 const GREETING_PROMPTS = ["Let's play Number Genie.", "Welcome to Number Genie!"];
 const INVOCATION_PROMPT = ["I\'m thinking of a number from %s and %s. What's your first guess?"];
@@ -25,6 +33,10 @@ const PLAY_AGAIN_YES_ACTION = 'play_again_yes';
 const PLAY_AGAIN_NO_ACTION = 'play_again_no';
 const DEFAULT_FALLBACK_ACTION = 'input.unknown';
 
+// IOT action group
+const TURNON_DEVICE_ACTION = 'device_on';
+const TURNOFF_DEVICE_ACTION = 'device_off';
+
 
 let actionMap = new Map();
 actionMap.set(GENERATE_ANSWER_ACTION, generateAnswer);
@@ -33,6 +45,9 @@ actionMap.set(QUIT_ACTION, quit);
 actionMap.set(PLAY_AGAIN_YES_ACTION, playAgainYes);
 actionMap.set(PLAY_AGAIN_NO_ACTION, playAgainNo);
 actionMap.set(DEFAULT_FALLBACK_ACTION, defaultFallback);
+
+actionMap.set(TURNON_DEVICE_ACTION, turnDeviceOn);
+actionMap.set(TURNOFF_DEVICE_ACTION, turnDeviceOff);
 
 
 app.post('/', function (request, response) {
@@ -45,6 +60,53 @@ app.post('/', function (request, response) {
 
 });
 
+app.get('/find', function (request, response) {
+    console.log(request.query);
+
+    if (request.headers["query"] && deviceList) {
+
+        var q = request.headers["query"];
+        var deviceId;
+        for (var i = 0; i < deviceList.length; ++i) {
+            var element = deviceList[i];
+            if (element == null || element.nameList == null) continue;
+            for (var j = 0; j < element.nameList.length; ++j) {
+                var name = element.nameList[j];
+                if (name.includes(q)) {
+                    deviceId = element.deviceId;
+                    break;
+                }
+            }
+
+            if (deviceId) {
+                break;
+            }
+        }
+        if (deviceId) {
+            console.log("find device id #" + deviceId);
+        }
+    }
+    console.log("call me");
+    response.sendStatus(200);
+});
+
+app.get("/iot", function (request, response) {
+    var q = request.query;
+    if (q["deviceId"] && q["action"]) {
+        var deviceId = q["deviceId"];
+        var action = q["action"];
+        changeDeviceAction(deviceId, action, function (success) {
+            if (success) {
+                response.sendStatus(200);
+            } else {
+                response.sendStatus(500);
+            }
+
+        })
+    }
+});
+
+
 // app.get('/', function (request, response) {
 //     console.log('header: ' + JSON.stringify(request.headers));
 //     console.log('body: ' + JSON.stringify(response.body));
@@ -53,6 +115,28 @@ app.post('/', function (request, response) {
 //     // response.sendStatus(200); // reponse OK
 //     app.handleRequest(actionMap);
 // });
+
+
+var deviceList;
+
+var serviceAccount = require('./service_account_key.json');
+firebase.initializeApp({
+    credential: firebase.credential.cert(serviceAccount),
+    databaseURL: 'https://diy-smarthome-183215.firebaseio.com'
+});
+startListeners();
+
+function startListeners() {
+    firebase.database().ref('/smarthome/LGG3-604a04d5de04c5b8').on('value', function (postSnapshot) {
+        if (postSnapshot.val()) {
+            deviceList = postSnapshot.val().deviceList;
+        }
+        console.log('database changed');
+    });
+    console.log('New star notifier started...');
+    console.log('Likes count updater started...');
+}
+
 
 // Start the server
 var server = app.listen(app.get('port'), function () {
@@ -64,27 +148,72 @@ var server = app.listen(app.get('port'), function () {
 });
 
 
+
+
+
 function getRandomNumber(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
 // Utility function to pick prompts
-function getRandomPrompt (app, array) {
+function getRandomPrompt(app, array) {
     let lastPrompt = app.data.lastPrompt;
     let prompt;
     if (lastPrompt) {
-      for (let index in array) {
-        prompt = array[index];
-        if (prompt != lastPrompt) {
-          break;
+        for (let index in array) {
+            prompt = array[index];
+            if (prompt != lastPrompt) {
+                break;
+            }
         }
-      }
     } else {
-      prompt = array[Math.floor(Math.random() * (array.length))];
+        prompt = array[Math.floor(Math.random() * (array.length))];
     }
     return prompt;
-  }
-  
+}
+
+function turnDeviceOn(app) {
+    let deviceName = app.getArgument('device_name');
+    if (deviceName) {
+        let deviceId = findDeviceId(deviceName);
+        if (deviceId) {
+            changeDeviceAction(deviceId, "turnOn", function(success) {
+                if (success) {
+                    app.tell('Thiết bị đã được tắt');
+                } else {
+                    app.ask('Xãy ra lỗi trong khi thao tác');
+                }
+            });
+        } else {
+            app.ask('Không tìm thấy thiết bị!');
+        }
+    } else {
+        app.ask('Bạn muốn thao tác với thiết bị nào?')
+    }
+}
+
+function turnDeviceOff(app) {
+    let deviceName = app.getArgument('device_name');
+    if (deviceName) {
+        let deviceId = findDeviceId(deviceName);
+        if (deviceId) {
+            changeDeviceAction(deviceId, "turnOff", function(success) {
+                if (success) {
+                    app.tell('Thiết bị đã được tắt');
+                } else {
+                    app.ask('Xãy ra lỗi trong khi thao tác');
+                }
+            });
+        } else {
+            app.ask('Không tìm thấy thiết bị!');
+        }
+    } else {
+        app.ask('Bạn muốn thao tác với thiết bị nào?')
+    }
+}
+
+
+
 
 function generateAnswer(app) {
     console.log('generateAnswer');
@@ -92,8 +221,8 @@ function generateAnswer(app) {
     app.data.answer = answer;
     app.data.guessCount = 0;
     app.data.fallbackCount = 0;
-    app.ask(sprintf(getRandomPrompt(app, GREETING_PROMPTS) + ' ' 
-    + getRandomPrompt(app, INVOCATION_PROMPT), MIN, MAX));
+    app.ask(sprintf(getRandomPrompt(app, GREETING_PROMPTS) + ' '
+        + getRandomPrompt(app, INVOCATION_PROMPT), MIN, MAX));
 }
 
 function checkGuess(app) {
@@ -152,4 +281,53 @@ function defaultFallback(app) {
     } else {
         app.tell('We can stop here. Let’s play again soon.');
     }
+}
+
+
+// Call api IOT
+function changeDeviceAction(deviceId, action, callback) {
+    var options = {
+        qs: {
+            'deviceID': deviceId, // -> uri + '?access_token=xxxxx%20xxxxx'
+            'name': action
+        },
+        headers: {
+            'Authorization': 'Basic a3l0aHVhdEBraW1zb250aWVuLmNvbTpDaG90cm9ubmllbXZ1aTE='
+            // 'User-Agent': 'Rx-Http-Request'
+        },
+        json: true // Automatically parses the JSON string in the response
+    };
+
+    rxhttp.get(HOST_IOT + "/callAction", options).subscribe(
+        (data) => {
+            callback(data.response.statusCode == 202);
+        },
+        (err) => {
+            callback(false);
+        }
+    );
+}
+
+// Support methods
+function findDeviceId(raw) {
+    var deviceId;
+    for (var i = 0; i < deviceList.length; ++i) {
+        var element = deviceList[i];
+        if (element == null || element.nameList == null) continue;
+        for (var j = 0; j < element.nameList.length; ++j) {
+            var name = element.nameList[j];
+            if (name.includes(raw)) {
+                deviceId = element.deviceId;
+                break;
+            }
+        }
+
+        if (deviceId) {
+            break;
+        }
+    }
+    if (deviceId) {
+        console.log("find device id #" + deviceId);
+    }
+    return deviceId;
 }
