@@ -197,13 +197,13 @@ function turnOnDevice(app) {
     if (id) {
         iot.turnOnDevice(id, function(code) {
             if (code == 202) {
-                app.tell("Thiết bị đã được mở");
+                app.tell("Device was on");
             } else {
-                app.ask("Xãy ra lỗi trong khi truy vấn");
+                app.ask("Error in processing");
             }
         });
     } else {
-        app.ask("Không tìm thấy thiết bị. Xin thử lại");
+        app.ask("Device not found. Please try again");
     }
 }
 
@@ -212,13 +212,13 @@ function turnOffDevice(app) {
     if (id) {
         iot.turnOffDevice(id, function(code) {
             if (code == 202) {
-                app.tell("Thiết bị đã được tắt");
+                app.tell("Device is off");
             } else {
-                app.ask("Xãy ra lỗi trong khi truy vấn");
+                app.ask("Error in processing");
             }
         });
     } else {
-        app.ask("Không tìm thấy thiết bị. Xin thử lại");
+        app.ask("Device not found. Please try again");
     }
 }
 
@@ -228,13 +228,13 @@ function startScene(app) {
     if (id) {
         iot.startScene(id, function(code) {
             if (code == 202) {
-                app.tell("Hệu ứng " + sceneName + " đã được mở");
+                app.tell(sceneName + " effect is on");
             } else {
-                app.ask("Xãy ra lỗi trong khi truy vấn");
+                app.ask("Error in processing");
             }
         });
     } else {
-        app.ask("Hiệu ứng không được tìm thấy hoặc chưa thiết lập");
+        app.ask("Effect not found. Please setup it");
     }
 }
 
@@ -244,13 +244,13 @@ function endScene(app) {
     if (id) {
         iot.endScene(id, function(code) {
             if (code == 202) {
-                app.tell("Hệu ứng " + sceneName + " đã được tắt");
+                app.tell(sceneName + " effect is off");
             } else {
-                app.ask("Xãy ra lỗi trong khi truy vấn");
+                app.ask("Error in processing");
             }
         });
     } else {
-        app.ask("Hiệu ứng không được tìm thấy hoặc chưa thiết lập");
+        app.ask("Effect not found. Please setup it");
     }
 }
 
@@ -261,15 +261,15 @@ function setAlarm(app) {
 
     if (hour) {
         if (minute && time) {
-            app.tell("Đã đặt báo thức lúc " + hour + " giờ " + minute + " phút " + time);
+            app.tell("Set alarm at " + hour + " o'clock " + minute + " " + time);
         } else if (minute) {
-            app.tell("Đã đặt báo thức lúc " + hour + " giờ " + minute + " phút");
+            app.tell("Set alarm at " + hour + " o'clock " + minute);
         } else {
-            app.tell("Đã đặt báo thức lúc " + hour + " giờ");
+            app.tell("Set alarm at " + hour + " o'clock");
         }
 
     } else {
-        app.ask("Bạn muốn báo thức vào lúc mấy giờ?");
+        app.ask("What time do you want to wake up?");
     }
 }
 
@@ -278,17 +278,13 @@ function askWiki(app) {
     if (question) {
         iot.askWiki(question, function(response) {
             if (response) {
-                app.data = {
-                    "like": true,
-                    "tax": '123456'
-                }
                 app.tell(response);
             } else {
-                app.tell('Không tìm thấy kết quả');
+                app.tell('Not found result');
             }
         });
     } else {
-        app.ask('Bạn muốn biết thông tin gì?');
+        app.ask('What do you want to hear?');
     }
 }
 
@@ -297,11 +293,11 @@ function uberRequest(app) {
     let to = app.getArgument('to');
 
     if (from == null) {
-        app.ask('Bạn muốn xuất phát từ đâu?');
+        app.ask('Where do you want to come from?');
     } else if (to == null) {
-        app.ask('Bạn muốn đến đâu?');
+        app.ask('Where you want to go?');
     } else {
-        app.tell('Đã yêu cầu đặt UBER đi từ ' + from + ' tới ' + to);
+        app.tell('Request was sent');
     }
 }
 
@@ -310,7 +306,7 @@ function askWeather(app) {
         if (response) {
             app.tell(response);
         } else {
-            app.tell('Không tìm thấy kết quả');
+            app.tell('Not found result');
         }
     })
 }

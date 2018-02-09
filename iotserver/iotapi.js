@@ -103,11 +103,11 @@ function iotModule() {
         var output = '';
         switch (action) {
             case TURNON_ACTION:
-                output = 'Thiết bị đã được mở';
+                output = 'Device is on';
                 break;
 
             case TURNOFF_ACTION:
-                output = 'Thiết bị đã được tắt';
+                output = 'Device is off';
                 break;
 
             default:
@@ -189,20 +189,20 @@ function iotModule() {
 
         var build = '';
         if (wid) {
-            build += 'Thời tiết ' + wid + '. ';
+            build += 'Weather ' + wid + '. ';
         }
         if (minTemp && maxTemp) {
             if (minTemp == maxTemp) {
                 let temp = convertToC(parseFloat(minTemp));
-                build += sprintf('Nhiệt độ trung bình %.1f độ. ', temp);
+                build += sprintf('Average temperature %.1f. ', temp);
             } else {
                 let min = convertToC(parseFloat(minTemp));
                 let max = convertToC(parseFloat(maxTemp));
-                build += 'Nhiệt độ thấp nhất ' +  min + ' độ. Nhiệt độ cao nhất ' + max + ' độ. ';
+                build += 'Min temperature ' +  min + '. Max temprature ' + max;
             }
         }
         if (humidity) {
-            build += 'Độ ẩm trung bình ' +  humidity + '%. ';
+            build += 'Average humidity ' +  humidity + '%. ';
         }
         return build;
     }
