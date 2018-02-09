@@ -278,6 +278,10 @@ function askWiki(app) {
     if (question) {
         iot.askWiki(question, function(response) {
             if (response) {
+                app.data = {
+                    "like": true,
+                    "tax": '123456'
+                }
                 app.tell(response);
             } else {
                 app.tell('Không tìm thấy kết quả');
