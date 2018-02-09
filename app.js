@@ -419,24 +419,24 @@ function findSceneId(raw) {
         return null;
     }
 
-    var deviceId;
+    var sceneId;
     for (var i = 0; i < sceneList.length; ++i) {
-        var element = deviceList[i];
+        var element = sceneList[i];
         if (element == null || element.nameList == null) continue;
         for (var j = 0; j < element.nameList.length; ++j) {
             var name = element.nameList[j];
             if (name.includes(raw)) {
-                deviceId = element.id;
+                sceneId = element.id;
                 break;
             }
         }
 
-        if (deviceId) {
+        if (sceneId) {
             break;
         }
     }
-    if (deviceId) {
-        console.log("find scene id #" + deviceId);
+    if (sceneId) {
+        console.log("find scene id #" + sceneId);
     }
-    return deviceId;
+    return sceneId;
 }
