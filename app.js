@@ -141,6 +141,7 @@ app.get('/find', function (request, response) {
 
 
 var deviceList;
+var sceneList;
 
 var serviceAccount = require('./service_account_key.json');
 firebase.initializeApp({
@@ -153,6 +154,7 @@ function startListeners() {
     firebase.database().ref('/smarthome/LGG3-604a04d5de04c5b8').on('value', function (postSnapshot) {
         if (postSnapshot.val()) {
             deviceList = postSnapshot.val().deviceList;
+            sceneList = postSnapshot.val().sceneList;
         }
         console.log('database changed');
     });
@@ -392,7 +394,7 @@ function findDeviceId(raw) {
         for (var j = 0; j < element.nameList.length; ++j) {
             var name = element.nameList[j];
             if (name.includes(raw)) {
-                deviceId = element.deviceId;
+                deviceId = element.id;
                 break;
             }
         }
@@ -414,13 +416,13 @@ function findSceneId(raw) {
     }
 
     var deviceId;
-    for (var i = 0; i < deviceList.length; ++i) {
+    for (var i = 0; i < sceneList.length; ++i) {
         var element = deviceList[i];
         if (element == null || element.nameList == null) continue;
         for (var j = 0; j < element.nameList.length; ++j) {
             var name = element.nameList[j];
             if (name.includes(raw)) {
-                deviceId = element.deviceId;
+                deviceId = element.id;
                 break;
             }
         }
@@ -430,7 +432,7 @@ function findSceneId(raw) {
         }
     }
     if (deviceId) {
-        console.log("find device id #" + deviceId);
+        console.log("find scene id #" + deviceId);
     }
     return deviceId;
 }
