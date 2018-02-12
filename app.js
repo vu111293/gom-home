@@ -155,6 +155,12 @@ app.post('/', function (request, response) {
     console.log('header: ' + JSON.stringify(request.headers));
     console.log('body: ' + JSON.stringify(response.body));
 
+
+    let userId = request['originalRequest']['data']['user']['userId'];
+    if (userId) {
+        console.log("@@User Id: " + userId);
+    }
+
     const app = new App({ request: request, response: response });
     // console.log('Token: ' + app.getUser().accessToken);
     // const userId = app.getUser().userId;
@@ -165,8 +171,8 @@ app.post('/', function (request, response) {
 });
 
 app.get('/auth', function(request, response) {
-    console.log('au request: ' + JSON.stringify(request));
-    console.log('au response: ' + JSON.stringify(response));
+    // console.log('au request: ' + JSON.stringif  y(request));
+    // console.log('au response: ' + JSON.stringify(response));
 });
 
 var deviceList;
