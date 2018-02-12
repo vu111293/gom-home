@@ -150,13 +150,13 @@ actionMap.set(ASK_WEATHER_ACTION, askWeather);
 
 var iot = new iotModule();
 app.post('/', function (request, response) {
-    console.log('header: ' + JSON.stringify(request.originalRequest));
     console.log('header: ' + JSON.stringify(request.headers));
     console.log('body: ' + JSON.stringify(response.body));
 
     const app = new App({ request: request, response: response });
-    const userId = app.getUser().userId;
-    console.log(userId);
+    console.log('Token: ' + app.getUser().accessToken);
+    // const userId = app.getUser().userId;
+    // console.log(userId);
 
     app.handleRequest(actionMap);
     // response.sendStatus(200); // reponse OK
