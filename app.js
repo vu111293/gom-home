@@ -113,7 +113,7 @@ const HOST_IOT = 'http://mhome-showroom.ddns.net/api';
 
 // Default action
 const QUIT_ACTION = 'quit';
-const WELLCOM_ACTION = 'input.welcome';
+const WELLCOM_ACTION = 'actions.intent.MAIN';
 const DEFAULT_FALLBACK_ACTION = 'input.unknown';
 
 // IOT action group
@@ -156,11 +156,11 @@ app.post('/', function (request, response) {
     console.log('body: ' + JSON.stringify(response.body));
 
 
-    let userId = request['originalRequest']['data']['user']['userId'];
-    if (userId) {
-        console.log("@@User Id: " + userId);
+    let accessToken = req.body.originalRequest.data.user.accessToken;
+    if (accessToken) {
+    console.log('accessToken is ' + accessToken);
     }
-
+    
     const app = new App({ request: request, response: response });
     // console.log('Token: ' + app.getUser().accessToken);
     // const userId = app.getUser().userId;
