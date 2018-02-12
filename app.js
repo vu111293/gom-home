@@ -156,11 +156,11 @@ app.post('/', function (request, response) {
     console.log('body: ' + JSON.stringify(response.body));
 
 
-    let accessToken = req.body.originalRequest.data.user.accessToken;
+    let accessToken = request.body.originalRequest.data.user.accessToken;
     if (accessToken) {
     console.log('accessToken is ' + accessToken);
     }
-    
+
     const app = new App({ request: request, response: response });
     // console.log('Token: ' + app.getUser().accessToken);
     // const userId = app.getUser().userId;
