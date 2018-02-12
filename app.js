@@ -154,7 +154,7 @@ app.post('/', function (request, response) {
     console.log('body: ' + JSON.stringify(response.body));
 
     const app = new App({ request: request, response: response });
-    console.log('Token: ' + app.getUser().accessToken);
+    // console.log('Token: ' + app.getUser().accessToken);
     // const userId = app.getUser().userId;
     // console.log(userId);
 
@@ -216,9 +216,20 @@ function getRandomPrompt(app, array) {
     return prompt;
 }
 
+function signInHandler(app) {
+    if (app.getSignInStatus() === app.SignInStatus.OK) {
+      let accessToken = app.getUser().accessToken;
+      console.log('Token: ' + accessToken);
+      // access account data with the token
+    } else {
+      app.tell('You need to sign-in before using the app.');
+    }
+  }
+
 // call iot api
 function turnOnDevice(app) {
-    console.log(app);
+    signInHandler(app);
+
     let dname = app.getArgument('device_name');
     var id = findDeviceId(dname);
     if (id) {
