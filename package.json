@@ -19,6 +19,7 @@
     "sprintf-js": "^1.0.3",
     "actions-on-google": "^1.0.0",
     "firebase-admin": "^4.0.3",
-    "rx-http-request": "^1.2.0"
+    "rx-http-request": "^1.2.0",
+    "localize": "^0.4.7"
   }
 }

@@ -7,8 +7,8 @@ let App = require('actions-on-google').DialogflowApp;
 let express = require('express');
 let bodyParse = require('body-parser');
 let sprintf = require('sprintf-js').sprintf;
-
 let iotModule = require('./iotserver/iotapi');
+let localize = require('localize');
 
 // net lib
 let rxhttp = require('rx-http-request').RxHttpRequest;
@@ -16,23 +16,103 @@ let rxhttp = require('rx-http-request').RxHttpRequest;
 // firebase lib
 let firebase = require('firebase-admin');
 
+let slib = new localize({
+    'hello': {
+        'en': 'Hello',
+        'vi': 'Xin chào'
+    },
+
+    'turn_on_device $[1]': {
+        'en': 'the $[1] is turned on',
+        'vi': '$[1] đã được mở'
+    },
+
+    'turn_off_device $[1]': {
+        'en': 'the $[1] is turned off',
+        'vi': '$[1] đã được tắt'
+    },
+
+    'err_iot_server': {
+        'en': 'error occurred while prcessing. Please try again',
+        'vi': 'Xãy ra lỗi khi truy vấn. Xin thử lại'
+    },
+
+    'device_not_found $[1]': {
+        'en': '$[1]',
+        'vi': 'Không tìm thấy thiết bị $[1]'
+    },
+
+    'turn_on_scene $[1]': {
+        'en': '$[1] effect is on',
+        'vi': 'Hiệu ứng $[1] đã được bật'
+    },
+
+    'turn_off_scene $[1]': {
+        'en': '$[1] effect is off',
+        'vi': 'Hiệu ứng $[1] đã được tắt'
+    },
+
+    'scene_not_found $[1]': {
+        'en': '$[1]',
+        'vi': 'Không tìm thấy hiệu ứng $[1]'
+    },
+
+    'not_found_result': {
+        'en': 'Result not found',
+        'vi': 'Không tìm thấy kết quả'
+    },
+
+    'uber_from': {
+        'en': 'Please tell start point',
+        'vi': 'Bạn muốn xuất phát từ đâu?'
+    },
+
+    'uber_to': {
+        'en': 'Please tell end point',
+        'vi': 'Bạn muốn đến đâu?'
+    },
+
+    'uber_response $[1] $[2]': {
+        'en': 'You have request uber from $[1] to $[2]',
+        'vi': 'Đã yêu cầu uber từ $[1] đến $[2]'
+    },
+
+    'ask_info': {
+        'en': 'What info do you want?',
+        'vi': 'Bạn muốn biết thông tin gì?'
+    },
+
+    'ask_alarm': {
+        'en': 'What time do you want to walkup?',
+        'vi': 'Bạn muốn đặt báo thức lúc mấy giờ?'
+    },
+
+    'set_hour_only $[1]':
+    {
+        'en': 'Alarm was set at $[1] o\'clock',
+        'vi': 'Đã đặt báo thức lúc $[1] giờ'
+    },
+
+    'set_hour_and_minute $[1] $[2]':
+    {
+        'en': 'Alarm was set at $[1] : $[2]',
+        'vi': 'Đã đặt báo thức lúc $[1] giờ $[2] phút'
+    },
+    
+});
+
+
+slib.setLocale('en');
 let app = express();
 app.set('port', (process.env.PORT || 8080));
 app.use(bodyParse.json({ type: 'application/json' }));
 
-const MIN = 0;
 const MAX = 100;
 
 const HOST_IOT = 'http://mhome-showroom.ddns.net/api';
 
-const GREETING_PROMPTS = ["Let's play Number Genie.", "Welcome to Number Genie!"];
-const INVOCATION_PROMPT = ["I\'m thinking of a number from %s and %s. What's your first guess?"];
-
-const GENERATE_ANSWER_ACTION = 'generate_answer';
-const CHECK_GUESS_ACTION = 'check_guess';
+// Default action
 const QUIT_ACTION = 'quit';
-const PLAY_AGAIN_YES_ACTION = 'play_again_yes';
-const PLAY_AGAIN_NO_ACTION = 'play_again_no';
 const DEFAULT_FALLBACK_ACTION = 'input.unknown';
 
 // IOT action group
@@ -53,11 +133,7 @@ const ASK_WEATHER_ACTION = 'question_weather';
 
 
 let actionMap = new Map();
-actionMap.set(GENERATE_ANSWER_ACTION, generateAnswer);
-actionMap.set(CHECK_GUESS_ACTION, checkGuess);
 actionMap.set(QUIT_ACTION, quit);
-actionMap.set(PLAY_AGAIN_YES_ACTION, playAgainYes);
-actionMap.set(PLAY_AGAIN_NO_ACTION, playAgainNo);
 actionMap.set(DEFAULT_FALLBACK_ACTION, defaultFallback);
 
 actionMap.set(TURNON_DEVICE_ACTION, turnOnDevice);
@@ -72,73 +148,24 @@ actionMap.set(UBER_REQUEST_ACTION, uberRequest);
 actionMap.set(ASK_WEATHER_ACTION, askWeather);
 
 
-
 var iot = new iotModule();
 app.post('/', function (request, response) {
+    console.log('header: ' + JSON.stringify(request.originalRequest));
     console.log('header: ' + JSON.stringify(request.headers));
     console.log('body: ' + JSON.stringify(response.body));
 
     const app = new App({ request: request, response: response });
+    const userId = app.getUser().userId;
+    console.log(userId);
+
     app.handleRequest(actionMap);
     // response.sendStatus(200); // reponse OK
 });
 
-app.get('/find', function (request, response) {
-    console.log(request.query);
-
-    if (request.headers["query"] && deviceList) {
-
-        var q = request.headers["query"];
-        var deviceId;
-        for (var i = 0; i < deviceList.length; ++i) {
-            var element = deviceList[i];
-            if (element == null || element.nameList == null) continue;
-            for (var j = 0; j < element.nameList.length; ++j) {
-                var name = element.nameList[j];
-                if (name.includes(q)) {
-                    deviceId = element.deviceId;
-                    break;
-                }
-            }
-
-            if (deviceId) {
-                break;
-            }
-        }
-        if (deviceId) {
-            console.log("find device id #" + deviceId);
-        }
-    }
-    console.log("call me");
-    response.sendStatus(200);
+app.get('/auth', function(request, response) {
+    console.log('au request: ' + JSON.stringify(request));
+    console.log('au response: ' + JSON.stringify(response));
 });
-
-// app.get("/iot", function (request, response) {
-//     var q = request.query;
-//     if (q["deviceId"] && q["action"]) {
-//         var deviceId = q["deviceId"];
-//         var action = q["action"];
-//         changeDeviceAction(deviceId, action, function (success) {
-//             if (success) {
-//                 response.sendStatus(200);
-//             } else {
-//                 response.sendStatus(500);
-//             }
-
-//         })
-//     }
-// });
-
-
-// app.get('/', function (request, response) {
-//     console.log('header: ' + JSON.stringify(request.headers));
-//     console.log('body: ' + JSON.stringify(response.body));
-
-//     const app = new App({ request: request, response: response });
-//     // response.sendStatus(200); // reponse OK
-//     app.handleRequest(actionMap);
-// });
-
 
 var deviceList;
 var sceneList;
@@ -156,10 +183,8 @@ function startListeners() {
             deviceList = postSnapshot.val().deviceList;
             sceneList = postSnapshot.val().sceneList;
         }
-        console.log('database changed');
+        console.log('firebase DB changed');
     });
-    console.log('New star notifier started...');
-    console.log('Likes count updater started...');
 }
 
 
@@ -168,8 +193,6 @@ var server = app.listen(app.get('port'), function () {
     console.log('App host %s', server.address().address);
     console.log('App listening on port %s', server.address().port);
     console.log('Press Ctrl+C to quit.');
-
-    console.log(sprintf("hello %s", "123113"));
 });
 
 function getRandomNumber(min, max) {
@@ -195,32 +218,36 @@ function getRandomPrompt(app, array) {
 
 // call iot api
 function turnOnDevice(app) {
-    var id = findDeviceId(app.getArgument('device_name'));
+    console.log(app);
+    let dname = app.getArgument('device_name');
+    var id = findDeviceId(dname);
     if (id) {
         iot.turnOnDevice(id, function(code) {
             if (code == 202) {
-                app.tell("Thiết bị đã được mở");
+                tellRaw(app, slib.translate('turn_on_device $[1]', dname));
             } else {
-                app.ask("Xãy ra lỗi trong khi truy vấn");
+                ask(app, 'err_iot_server');
             }
         });
     } else {
-        app.ask("Không tìm thấy thiết bị. Xin thử lại");
+        askRaw(app, slib.translate('device_not_found $[1]', dname));
+        // ask(app, 'device_not_found');
     }
 }
 
 function turnOffDevice(app) {
-    var id = findDeviceId(app.getArgument('device_name'));
+    let dname = app.getArgument('device_name');
+    var id = findDeviceId(dname);
     if (id) {
         iot.turnOffDevice(id, function(code) {
             if (code == 202) {
-                app.tell("Thiết bị đã được tắt");
+                tellRaw(app, slib.translate('turn_off_device $[1]', dname));
             } else {
-                app.ask("Xãy ra lỗi trong khi truy vấn");
+                ask(app, 'err_iot_server');
             }
         });
     } else {
-        app.ask("Không tìm thấy thiết bị. Xin thử lại");
+        askRaw(app, slib.translate('device_not_found $[1]', dname));
     }
 }
 
@@ -230,29 +257,30 @@ function startScene(app) {
     if (id) {
         iot.startScene(id, function(code) {
             if (code == 202) {
-                app.tell("Hệu ứng " + sceneName + " đã được mở");
+                tellRaw(app, slib.translate('turn_on_scene $[1]', sceneName));
             } else {
-                app.ask("Xãy ra lỗi trong khi truy vấn");
+                ask(app, 'err_iot_server');
             }
         });
     } else {
-        app.ask("Hiệu ứng không được tìm thấy hoặc chưa thiết lập");
+        askRaw(app, slib.translate('scene_not_found $[1]', scenename));
+        // app.ask("Hiệu ứng không được tìm thấy hoặc chưa thiết lập");
     }
 }
 
 function endScene(app) {
-    var sceneName = app.getArgument('scene_name');
+    let sceneName = app.getArgument('scene_name');
     var id = findSceneId(sceneName);
     if (id) {
         iot.endScene(id, function(code) {
             if (code == 202) {
-                app.tell("Hệu ứng " + sceneName + " đã được tắt");
+                tellRaw(app, slib.translate('turn_off_scene $[1]', sceneName));
             } else {
-                app.ask("Xãy ra lỗi trong khi truy vấn");
+                ask(app, 'err_iot_server');
             }
         });
     } else {
-        app.ask("Hiệu ứng không được tìm thấy hoặc chưa thiết lập");
+        askRaw(app, slib.translate('scene_not_found $[1]', scenename));
     }
 }
 
@@ -263,15 +291,16 @@ function setAlarm(app) {
 
     if (hour) {
         if (minute && time) {
-            app.tell("Đã đặt báo thức lúc " + hour + " giờ " + minute + " phút " + time);
+            tellRaw(app, slib.translate('set_hour_and_minute $[1] $[2]', hour, minute));
+            // app.tell("Đã đặt báo thức lúc " + hour + " giờ " + minute + " phút " + time);
         } else if (minute) {
-            app.tell("Đã đặt báo thức lúc " + hour + " giờ " + minute + " phút");
+            tellRaw(app, slib.translate('set_hour_and_minute $[1] $[2]', hour, minute));
         } else {
-            app.tell("Đã đặt báo thức lúc " + hour + " giờ");
+            tellRaw(app, slib.translate('set_hour_only $[1]', hour));
         }
 
     } else {
-        app.ask("Bạn muốn báo thức vào lúc mấy giờ?");
+        ask(app, 'ask_alarm');
     }
 }
 
@@ -280,17 +309,13 @@ function askWiki(app) {
     if (question) {
         iot.askWiki(question, function(response) {
             if (response) {
-                app.data = {
-                    "like": true,
-                    "tax": '123456'
-                }
-                app.tell(response);
+                tellRaw(app, response);
             } else {
-                app.tell('Không tìm thấy kết quả');
+                tell(app, 'not_found_result');
             }
         });
     } else {
-        app.ask('Bạn muốn biết thông tin gì?');
+        ask(app, 'ask_info');
     }
 }
 
@@ -299,74 +324,62 @@ function uberRequest(app) {
     let to = app.getArgument('to');
 
     if (from == null) {
-        app.ask('Bạn muốn xuất phát từ đâu?');
+        ask(app, 'uber_start');
     } else if (to == null) {
-        app.ask('Bạn muốn đến đâu?');
+        ask(app, 'uber_end');
     } else {
-        app.tell('Đã yêu cầu đặt UBER đi từ ' + from + ' tới ' + to);
+        tellRaw(app, slib.translate('uber_response $[1] $[2]', from, to));
     }
 }
 
 function askWeather(app) {
     iot.askWeather(function(response) {
         if (response) {
-            app.tell(response);
+            tellRaw(app, response);
         } else {
-            app.tell('Không tìm thấy kết quả');
+            tell(app, 'not_found_result');
         }
     })
 }
 
-function generateAnswer(app) {
-    console.log('generateAnswer');
-    var answer = getRandomNumber(0, 100);
-    app.data.answer = answer;
-    app.data.guessCount = 0;
-    app.data.fallbackCount = 0;
-    app.ask(sprintf(getRandomPrompt(app, GREETING_PROMPTS) + ' '
-        + getRandomPrompt(app, INVOCATION_PROMPT), MIN, MAX));
-}
+// function generateAnswer(app) {
+//     console.log('generateAnswer');
+//     var answer = getRandomNumber(0, 100);
+//     app.data.answer = answer;
+//     app.data.guessCount = 0;
+//     app.data.fallbackCount = 0;
+//     app.ask(sprintf(getRandomPrompt(app, GREETING_PROMPTS) + ' '
+//         + getRandomPrompt(app, INVOCATION_PROMPT), MIN, MAX));
+// }
 
-function checkGuess(app) {
-    console.log('checkGuess');
-    let answer = app.data.answer;
-    let guess = parseInt(app.getArgument('guess'));
-    if (app.data.hint) {
-        if (app.data.hint === 'higher' && guess <= app.data.previousGuess) {
-            app.ask('Nice try, but it’s still higher than ' + app.data.previousGuess);
-            return;
-        } else if (app.data.hint === 'lower' && guess >= app.data.previousGuess) {
-            app.ask('Nice try, but it’s still lower than ' + app.data.previousGuess);
-            return;
-        }
-    }
-    if (answer > guess) {
-        app.data.hint = 'higher';
-        app.data.previousGuess = guess;
-        app.ask('It\'s higher than ' + guess + '. What\'s your next guess?');
-    } else if (answer < guess) {
-        app.data.hint = 'lower';
-        app.data.previousGuess = guess;
-        app.ask('It\'s lower than ' + guess + '. Next guess?');
-    } else {
-        app.data.hint = 'none';
-        app.data.previousGuess = -1;
-        app.setContext('yes_no');
-        app.ask('Congratulations, that\'s it! I was thinking of ' + answer + '. Wanna play again?');
-    }
-}
-
-function playAgainYes(app) {
-    console.log('playAgainYes');
-    var answer = getRandomNumber(0, 100);
-    app.data.answer = answer;
-    app.ask('Great! I\'m thinking of a number from 0 and 100! What\'s your guess?');
-}
-
-function playAgainNo(app) {
-    console.log('playAgainNo');
-    app.tell('Alright, talk to you later then.');
-}
+// function checkGuess(app) {
+//     console.log('checkGuess');
+//     let answer = app.data.answer;
+//     let guess = parseInt(app.getArgument('guess'));
+//     if (app.data.hint) {
+//         if (app.data.hint === 'higher' && guess <= app.data.previousGuess) {
+//             app.ask('Nice try, but it’s still higher than ' + app.data.previousGuess);
+//             return;
+//         } else if (app.data.hint === 'lower' && guess >= app.data.previousGuess) {
+//             app.ask('Nice try, but it’s still lower than ' + app.data.previousGuess);
+//             return;
+//         }
+//     }
+//     if (answer > guess) {
+//         app.data.hint = 'higher';
+//         app.data.previousGuess = guess;
+//         app.ask('It\'s higher than ' + guess + '. What\'s your next guess?');
+//     } else if (answer < guess) {
+//         app.data.hint = 'lower';
+//         app.data.previousGuess = guess;
+//         app.ask('It\'s lower than ' + guess + '. Next guess?');
+//     } else {
+//         app.data.hint = 'none';
+//         app.data.previousGuess = -1;
+//         app.setContext('yes_no');
+//         app.ask('Congratulations, that\'s it! I was thinking of ' + answer + '. Wanna play again?');
+//     }
+// }
 
 function quit(app) {
     console.log('quit');
@@ -439,4 +452,26 @@ function findSceneId(raw) {
         console.log("find scene id #" + sceneId);
     }
     return sceneId;
+}
+
+
+// utils function
+function ask(app, strName) {
+    if (strName == null) {
+        app.ask("");
+        return;
+    }
+    app.ask(slib.translate(strName));
+}
+
+function askRaw(app, raw) {
+    app.ask(raw);
+}
+
+function tell(app, strName) {
+    app.tell("(end)" + slib.translate(strName));
+}
+
+function tellRaw(app, raw) {
+    app.tell("(end)" + raw);
 }
