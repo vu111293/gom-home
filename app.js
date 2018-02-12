@@ -113,6 +113,7 @@ const HOST_IOT = 'http://mhome-showroom.ddns.net/api';
 
 // Default action
 const QUIT_ACTION = 'quit';
+const WELLCOM_ACTION = 'input.welcome';
 const DEFAULT_FALLBACK_ACTION = 'input.unknown';
 
 // IOT action group
@@ -134,6 +135,7 @@ const ASK_WEATHER_ACTION = 'question_weather';
 
 let actionMap = new Map();
 actionMap.set(QUIT_ACTION, quit);
+actionMap.set(WELLCOM_ACTION, welcome)
 actionMap.set(DEFAULT_FALLBACK_ACTION, defaultFallback);
 
 actionMap.set(TURNON_DEVICE_ACTION, turnOnDevice);
@@ -227,6 +229,11 @@ function signInHandler(app) {
   }
 
 // call iot api
+function welcome(app) {
+    signInHandler(app);
+    app.tell('Nice to meet u. I\'m ding dong');
+} 
+
 function turnOnDevice(app) {
     signInHandler(app);
 
