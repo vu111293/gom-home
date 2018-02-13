@@ -172,9 +172,9 @@ app.post('/', function (request, response) {
 });
 
 app.post('/token', function (request, response) {
-    console.log('token called');
-    let clientId = request.body['client_id'];
-    let clientSecret = request.body['client_secret'];
+    console.log('token called ' + JSON.stringify(request.body));
+    let clientId = request.body.client_id;
+    let clientSecret = request.body.client_secret;
     let grantType = request.body['grant_type'];
 
     console.log('client: ' + clientId);
@@ -197,7 +197,7 @@ app.post('/token', function (request, response) {
         });
     } else {
         // refresh token
-        let ref2Token = requst.body['refresh_token'];
+        let ref2Token = request.body['refresh_token'];
         console.log('refresh token: ' + ref2Token);
         response.send({
             token_type: "bearer",
