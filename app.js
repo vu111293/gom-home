@@ -113,7 +113,7 @@ const HOST_IOT = 'http://mhome-showroom.ddns.net/api';
 
 // Default action
 const QUIT_ACTION = 'quit';
-const WELLCOM_ACTION = 'actions.intent.MAIN';
+const WELLCOM_ACTION = 'input.welcome';
 const DEFAULT_FALLBACK_ACTION = 'input.unknown';
 
 // IOT action group
