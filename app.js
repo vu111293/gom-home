@@ -174,10 +174,13 @@ app.post('/', function (request, response) {
 app.post('/token', function (request, response) {
     console.log('token called');
 
-    let clientId = request.query['client_id'];
-    let clientSecret = request.query['client_secret'];
-    let code = request.query['code'];
-    console.log('code: ' + code);
+    console.log('header: ' + JSON.stringify(request.headers));
+    console.log('body: ' + JSON.stringify(response.body));
+
+    // let clientId = request.query['client_id'];
+    // let clientSecret = request.query['client_secret'];
+    // let code = request.query['code'];
+    // console.log('code: ' + code);
 });
 
 app.get('/auth', function (request, response) {
