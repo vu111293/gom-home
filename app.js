@@ -172,7 +172,8 @@ app.post('/', function (request, response) {
 });
 
 app.post('/token', function (request, response) {
-    console.log('token called ' + JSON.stringify(request.body));
+    console.log('token called Rs ' + JSON.stringify(request));
+    console.log('token called Rp ' + JSON.stringify(response));
     let clientId = request.body.client_id;
     let clientSecret = request.body.client_secret;
     let grantType = request.body['grant_type'];
