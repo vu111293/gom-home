@@ -173,14 +173,38 @@ app.post('/', function (request, response) {
 
 app.post('/token', function (request, response) {
     console.log('token called');
+    let clientId = request.body['client_id'];
+    let clientSecret = request.body['client_secret'];
+    let grantType = request.body['grant_type'];
 
-    console.log('header: ' + JSON.stringify(request.headers));
-    console.log('body: ' + JSON.stringify(response.body));
+    console.log('client: ' + clientId);
+    console.log('secret: ' + clientSecret);
 
-    // let clientId = request.query['client_id'];
-    // let clientSecret = request.query['client_secret'];
-    // let code = request.query['code'];
-    // console.log('code: ' + code);
+    // verify clientid & clientsceret in db
+
+    if (grantType == 'authorization_code') {
+        // get code
+        let code = request.body['code'];
+        console.log('code: ' + code);
+
+        // generate refresh token
+        let refToken = 'YmNkZWZnaGlqa2xtbm9wcQ';
+        response.send({
+            token_type: "bearer",
+            access_token: "YmNkZWZnaGlqa2xtbm9wcQ132",
+            refresh_token: "YmNkZWZnaGlqa2xtbm9wcQ456",
+            expires_in: 300
+        });
+    } else {
+        // refresh token
+        let ref2Token = requst.body['refresh_token'];
+        console.log('refresh token: ' + ref2Token);
+        response.send({
+            token_type: "bearer",
+            access_token: "YmNkZWZnaGlqa2xtbm9wcQ789",
+            expires_in: 300
+        })
+    }
 });
 
 app.get('/auth', function (request, response) {
