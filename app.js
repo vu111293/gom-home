@@ -185,7 +185,7 @@ app.get('/auth', function (request, response) {
 
     var options = {
         qs: {
-            'code': 'this is code for auth my server',
+            'code': 'thisiscodeauthmyserver',
             'state': state
         },
         headers: {
@@ -196,6 +196,7 @@ app.get('/auth', function (request, response) {
     rxhttp.get(redirectUrl, options)
         .subscribe(
         (data) => {
+            console.log('data: ' + JSON.stringify(data));
             console.log('redirect success!');
             // callback(null);
         },
