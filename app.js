@@ -183,9 +183,11 @@ app.get('/auth', function (request, response) {
     let scope = request.query['scope'];
     let state = request.query['state'];
 
+    console.log('redirect: ' + redirectUrl);
+    console.state('state: ' + state);
     var options = {
         qs: {
-            'code': 'thisiscodeauthmyserver',
+            'code': 'Y2RlZmdoaWprbG1ub3Bxcg==',
             'state': state
         },
         headers: {
