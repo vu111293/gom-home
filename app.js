@@ -158,8 +158,11 @@ app.post('/', function (request, response) {
 
 
     let accessToken = request.body.originalRequest.data.user.accessToken;
+    let userId = request.body.originalRequest.data.user.userId;
+    
     if (accessToken) {
         console.log('accessToken is ' + accessToken);
+        console.log('userId is ' + userId);
     }
 
     const app = new App({ request: request, response: response });
