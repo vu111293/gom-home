@@ -171,6 +171,8 @@ app.post('/', function (request, response) {
 });
 
 app.get('/auth', function(request, response) {
+    console.log('auth called');
+    response.sendStatus(200);
     // console.log('au request: ' + JSON.stringif  y(request));
     // console.log('au response: ' + JSON.stringify(response));
 });
