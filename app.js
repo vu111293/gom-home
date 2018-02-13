@@ -171,8 +171,12 @@ app.post('/', function (request, response) {
 });
 
 app.post('/token', function (request, response) {
-
     console.log('token called');
+
+    let clientId = request.query['client_id'];
+    let clientSecret = request.query['client_secret'];
+    let code = request.query['code'];
+    console.log('code: ' + code);
 });
 
 app.get('/auth', function (request, response) {
@@ -185,17 +189,17 @@ app.get('/auth', function (request, response) {
 
     console.log('redirect: ' + redirectUrl);
     console.log('state: ' + state);
-    var options = {
-        qs: {
-            'code': 'Y2RlZmdoaWprbG1ub3Bxcg==',
-            'state': state
-        },
-        headers: {
-            // 'Authorization': AUTHENTICATION_IOT_SERVER
-        },
-        json: true
-    };
-    rxhttp.get(redirectUrl, options)
+    // var options = {
+    //     qs: {
+    //         'code': 'Y2RlZmdoaWprbG1ub3Bxcg==',
+    //         'state': state
+    //     },
+    //     headers: {
+    //         // 'Authorization': AUTHENTICATION_IOT_SERVER
+    //     },
+    //     json: true
+    // };
+    rxhttp.get(redirectUrl + '?code=Y2RlZmdoaWprbG1ub3Bxcg' + '&state=' + state)
         .subscribe(
         (data) => {
             console.log('data: ' + JSON.stringify(data));
