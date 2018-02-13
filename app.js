@@ -199,7 +199,7 @@ app.get('/auth', function (request, response) {
     //     },
     //     json: true
     // };
-    rxhttp.get(redirectUrl + '?code=Y2RlZmdoaWprbG1ub3Bxcg' + '&state=' + state)
+    rxhttp.get(redirectUrl + '?code=Y2RlZmdoaWprbG1ub3asdasd' + '&state=' + state)
         .subscribe(
         (data) => {
             console.log('data: ' + JSON.stringify(data));
@@ -207,6 +207,7 @@ app.get('/auth', function (request, response) {
             // callback(null);
         },
         (err) => {
+            console.log('error: ' + JSON.stringify(err));
             console.log('redirect fail!');
             // callback(null);
         }
