@@ -171,9 +171,12 @@ app.post('/', function (request, response) {
     // response.sendStatus(200); // reponse OK
 });
 
-app.post('/token', function (request, response) {
+// create application/x-www-form-urlencoded parser
+var urlencodedParser = bodyParse.urlencoded({ extended: false })
+app.post('/token', urlencodedParser, function (request, response) {
     console.log('token called Rs ' + request);
-    
+    console.dir(request, {depth: null});
+
     let clientId = request.body.client_id;
     let clientSecret = request.body.client_secret;
     let grantType = request.body['grant_type'];
