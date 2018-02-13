@@ -184,7 +184,7 @@ app.get('/auth', function (request, response) {
     let state = request.query['state'];
 
     console.log('redirect: ' + redirectUrl);
-    console.state('state: ' + state);
+    console.log('state: ' + state);
     var options = {
         qs: {
             'code': 'Y2RlZmdoaWprbG1ub3Bxcg==',
