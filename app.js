@@ -9,6 +9,7 @@ let bodyParse = require('body-parser');
 let sprintf = require('sprintf-js').sprintf;
 let iotModule = require('./iotserver/iotapi');
 let localize = require('localize');
+let url = require('url');
 
 // net lib
 let rxhttp = require('rx-http-request').RxHttpRequest;
@@ -189,6 +190,9 @@ app.get('/auth', function (request, response) {
 
     console.log('redirect: ' + redirectUrl);
     console.log('state: ' + state);
+
+    response.redirect(redirectUrl + '?code=Y2RlZmdoaWprbG1ub3asdasd' + '&state=' + state);
+
     // var options = {
     //     qs: {
     //         'code': 'Y2RlZmdoaWprbG1ub3Bxcg==',
@@ -199,19 +203,19 @@ app.get('/auth', function (request, response) {
     //     },
     //     json: true
     // };
-    rxhttp.get(redirectUrl + '?code=Y2RlZmdoaWprbG1ub3asdasd' + '&state=' + state)
-        .subscribe(
-        (data) => {
-            console.log('data: ' + JSON.stringify(data));
-            console.log('redirect success!');
-            // callback(null);
-        },
-        (err) => {
-            console.log('error: ' + JSON.stringify(err));
-            console.log('redirect fail!');
-            // callback(null);
-        }
-        );
+    // rxhttp.get(redirectUrl + '?code=Y2RlZmdoaWprbG1ub3asdasd' + '&state=' + state)
+    //     .subscribe(
+    //     (data) => {
+    //         console.log('data: ' + JSON.stringify(data));
+    //         console.log('redirect success!');
+    //         // callback(null);
+    //     },
+    //     (err) => {
+    //         console.log('error: ' + JSON.stringify(err));
+    //         console.log('redirect fail!');
+    //         // callback(null);
+    //     }
+    //     );
     // response.sendStatus(200);
 });
 
