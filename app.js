@@ -88,17 +88,17 @@ let slib = new localize({
     },
 
     'set_hour_only $[1]':
-    {
-        'en': 'Alarm was set at $[1] o\'clock',
-        'vi': 'Đã đặt báo thức lúc $[1] giờ'
-    },
+        {
+            'en': 'Alarm was set at $[1] o\'clock',
+            'vi': 'Đã đặt báo thức lúc $[1] giờ'
+        },
 
     'set_hour_and_minute $[1] $[2]':
-    {
-        'en': 'Alarm was set at $[1] : $[2]',
-        'vi': 'Đã đặt báo thức lúc $[1] giờ $[2] phút'
-    },
-    
+        {
+            'en': 'Alarm was set at $[1] : $[2]',
+            'vi': 'Đã đặt báo thức lúc $[1] giờ $[2] phút'
+        },
+
 });
 
 
@@ -158,7 +158,7 @@ app.post('/', function (request, response) {
 
     let accessToken = request.body.originalRequest.data.user.accessToken;
     if (accessToken) {
-    console.log('accessToken is ' + accessToken);
+        console.log('accessToken is ' + accessToken);
     }
 
     const app = new App({ request: request, response: response });
@@ -170,11 +170,41 @@ app.post('/', function (request, response) {
     // response.sendStatus(200); // reponse OK
 });
 
-app.get('/auth', function(request, response) {
+app.post('/token', function (request, response) {
+
+    console.log('token called');
+});
+
+app.get('/auth', function (request, response) {
     console.log('auth called');
-    response.sendStatus(200);
-    // console.log('au request: ' + JSON.stringif  y(request));
-    // console.log('au response: ' + JSON.stringify(response));
+    let responseType = request.query['response_type'];
+    let clientId = request.query['client_id'];
+    let redirectUrl = request.query['redirect_uri'];
+    let scope = request.query['scope'];
+    let state = request.query['state'];
+
+    var options = {
+        qs: {
+            'code': 'this is code for auth my server',
+            'state': state
+        },
+        headers: {
+            // 'Authorization': AUTHENTICATION_IOT_SERVER
+        },
+        json: true
+    };
+    rxhttp.get(redirectUrl, options)
+        .subscribe(
+        (data) => {
+            console.log('redirect success!');
+            // callback(null);
+        },
+        (err) => {
+            console.log('redirect fail!');
+            // callback(null);
+        }
+        );
+    // response.sendStatus(200);
 });
 
 var deviceList;
@@ -228,19 +258,19 @@ function getRandomPrompt(app, array) {
 
 function signInHandler(app) {
     if (app.getSignInStatus() === app.SignInStatus.OK) {
-      let accessToken = app.getUser().accessToken;
-      console.log('Token: ' + accessToken);
-      // access account data with the token
+        let accessToken = app.getUser().accessToken;
+        console.log('Token: ' + accessToken);
+        // access account data with the token
     } else {
-      app.tell('You need to sign-in before using the app.');
+        app.tell('You need to sign-in before using the app.');
     }
-  }
+}
 
 // call iot api
 function welcome(app) {
     signInHandler(app);
     app.tell('Nice to meet u. I\'m ding dong');
-} 
+}
 
 function turnOnDevice(app) {
     signInHandler(app);
@@ -248,7 +278,7 @@ function turnOnDevice(app) {
     let dname = app.getArgument('device_name');
     var id = findDeviceId(dname);
     if (id) {
-        iot.turnOnDevice(id, function(code) {
+        iot.turnOnDevice(id, function (code) {
             if (code == 202) {
                 tellRaw(app, slib.translate('turn_on_device $[1]', dname));
             } else {
@@ -265,7 +295,7 @@ function turnOffDevice(app) {
     let dname = app.getArgument('device_name');
     var id = findDeviceId(dname);
     if (id) {
-        iot.turnOffDevice(id, function(code) {
+        iot.turnOffDevice(id, function (code) {
             if (code == 202) {
                 tellRaw(app, slib.translate('turn_off_device $[1]', dname));
             } else {
@@ -281,7 +311,7 @@ function startScene(app) {
     var sceneName = app.getArgument('scene_name');
     var id = findSceneId(sceneName);
     if (id) {
-        iot.startScene(id, function(code) {
+        iot.startScene(id, function (code) {
             if (code == 202) {
                 tellRaw(app, slib.translate('turn_on_scene $[1]', sceneName));
             } else {
@@ -298,7 +328,7 @@ function endScene(app) {
     let sceneName = app.getArgument('scene_name');
     var id = findSceneId(sceneName);
     if (id) {
-        iot.endScene(id, function(code) {
+        iot.endScene(id, function (code) {
             if (code == 202) {
                 tellRaw(app, slib.translate('turn_off_scene $[1]', sceneName));
             } else {
@@ -333,7 +363,7 @@ function setAlarm(app) {
 function askWiki(app) {
     var question = app.getArgument('query');
     if (question) {
-        iot.askWiki(question, function(response) {
+        iot.askWiki(question, function (response) {
             if (response) {
                 tellRaw(app, response);
             } else {
@@ -359,7 +389,7 @@ function uberRequest(app) {
 }
 
 function askWeather(app) {
-    iot.askWeather(function(response) {
+    iot.askWeather(function (response) {
         if (response) {
             tellRaw(app, response);
         } else {
