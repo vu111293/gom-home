@@ -174,16 +174,12 @@ app.post('/', function (request, response) {
 // create application/x-www-form-urlencoded parser
 var urlencodedParser = bodyParse.urlencoded({ extended: false })
 app.post('/token', urlencodedParser, function (request, response) {
-    console.log('token called Rs ' + request);
-    console.dir(request, {depth: null});
-
     let clientId = request.body.client_id;
     let clientSecret = request.body.client_secret;
     let grantType = request.body['grant_type'];
 
     console.log('client: ' + clientId);
     console.log('secret: ' + clientSecret);
-
     // verify clientid & clientsceret in db
 
     if (grantType == 'authorization_code') {
@@ -223,31 +219,6 @@ app.get('/auth', function (request, response) {
     console.log('state: ' + state);
 
     response.redirect(redirectUrl + '?code=Y2RlZmdoaWprbG1ub3asdasd' + '&state=' + state);
-
-    // var options = {
-    //     qs: {
-    //         'code': 'Y2RlZmdoaWprbG1ub3Bxcg==',
-    //         'state': state
-    //     },
-    //     headers: {
-    //         // 'Authorization': AUTHENTICATION_IOT_SERVER
-    //     },
-    //     json: true
-    // };
-    // rxhttp.get(redirectUrl + '?code=Y2RlZmdoaWprbG1ub3asdasd' + '&state=' + state)
-    //     .subscribe(
-    //     (data) => {
-    //         console.log('data: ' + JSON.stringify(data));
-    //         console.log('redirect success!');
-    //         // callback(null);
-    //     },
-    //     (err) => {
-    //         console.log('error: ' + JSON.stringify(err));
-    //         console.log('redirect fail!');
-    //         // callback(null);
-    //     }
-    //     );
-    // response.sendStatus(200);
 });
 
 var deviceList;
@@ -311,8 +282,8 @@ function signInHandler(app) {
 
 // call iot api
 function welcome(app) {
-    signInHandler(app);
-    app.tell('Nice to meet u. I\'m ding dong');
+    // signInHandler(app);
+    app.ask('Nice to meet u. I\'m ding dong. Can i help u?');
 }
 
 function turnOnDevice(app) {
