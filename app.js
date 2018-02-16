@@ -334,7 +334,7 @@ function startScene(app) {
             }
         });
     } else {
-        askRaw(app, slib.translate('scene_not_found $[1]', scenename));
+        askRaw(app, slib.translate('scene_not_found $[1]', sceneName));
         // app.ask("Hiệu ứng không được tìm thấy hoặc chưa thiết lập");
     }
 }
@@ -351,7 +351,7 @@ function endScene(app) {
             }
         });
     } else {
-        askRaw(app, slib.translate('scene_not_found $[1]', scenename));
+        askRaw(app, slib.translate('scene_not_found $[1]', sceneName));
     }
 }
 
