@@ -103,7 +103,7 @@ let slib = new localize({
 });
 
 
-slib.setLocale('en');
+slib.setLocale('vi');
 let app = express();
 app.set('port', (process.env.PORT || 8080));
 app.use(bodyParse.json({ type: 'application/json' }));
@@ -155,15 +155,13 @@ var iot = new iotModule();
 app.post('/', function (request, response) {
     console.log('header: ' + JSON.stringify(request.headers));
     console.log('body: ' + JSON.stringify(response.body));
-
-
-    let accessToken = request.body.originalRequest.data.user.accessToken;
-    let userId = request.body.originalRequest.data.user.userId;
+    // let accessToken = request.body.originalRequest.data.user.accessToken;
+    // let userId = request.body.originalRequest.data.user.userId;
     
-    if (accessToken) {
-        console.log('accessToken is ' + accessToken);
-        console.log('userId is ' + userId);
-    }
+    // if (accessToken) {
+    //     console.log('accessToken is ' + accessToken);
+    //     console.log('userId is ' + userId);
+    // }
 
     const app = new App({ request: request, response: response });
     // console.log('Token: ' + app.getUser().accessToken);
