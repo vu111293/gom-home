@@ -474,13 +474,14 @@ function findDeviceId(raw) {
     if (raw == null) {
         return null;
     }
+    raw = raw.toLowerCase();
 
     var deviceId;
     for (var i = 0; i < deviceList.length; ++i) {
         var element = deviceList[i];
         if (element == null || element.nameList == null) continue;
         for (var j = 0; j < element.nameList.length; ++j) {
-            var name = element.nameList[j];
+            var name = element.nameList[j].toLowerCase();
             if (name.includes(raw)) {
                 deviceId = element.id;
                 break;
@@ -502,13 +503,14 @@ function findSceneId(raw) {
     if (raw == null) {
         return null;
     }
+    raw = raw.toLowerCase();
 
     var sceneId;
     for (var i = 0; i < sceneList.length; ++i) {
         var element = sceneList[i];
         if (element == null || element.nameList == null) continue;
         for (var j = 0; j < element.nameList.length; ++j) {
-            var name = element.nameList[j];
+            var name = element.nameList[j].toLowerCase();
             if (name.includes(raw)) {
                 sceneId = element.id;
                 break;
