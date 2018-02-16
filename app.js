@@ -284,12 +284,12 @@ function signInHandler(app) {
 // call iot api
 function welcome(app) {
     // signInHandler(app);
-    app.ask('Nice to meet u. I\'m ding dong. Can i help u?');
+    // app.ask('Nice to meet u. I\'m ding dong. Can i help u?');
+    app.ask('Hi. Tôi là em hôm.Tôi có thể giúp gì cho bạn?');
 }
 
 function turnOnDevice(app) {
-    signInHandler(app);
-
+    // signInHandler(app);
     let dname = app.getArgument('device_name');
     var id = findDeviceId(dname);
     if (id) {
