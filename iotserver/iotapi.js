@@ -43,7 +43,7 @@ function iotModule() {
     }
 
     this.endScene = function (id, callback) {
-        changeSceneAction(id, END_ACTION, callback);
+        changeSceneAction(id, STOP_ACTION, callback);
     }
 
     this.askWiki = function (question, callback) {
