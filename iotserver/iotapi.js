@@ -20,10 +20,16 @@ const SET_COLOR_ACTION = 'setColor';
 const OPEN_ACTION = 'open';
 const CLOSE_ACTION = 'close';
 
+
+const HOST_ECOM = 'https://innoway-server.mcommerce.com.vn/api/v1';
+const AUTHENTICATION_ECOM_SERVER = 'Basic a3l0aHVhdEBraW1zb250aWVuLmNvbTpDaG90cm9ubmllbXZ1aTE=';
+
+
+
+
 function iotModule() {
 
     // api public 
-
     this.detectFace = function () {
         sampleFunction();
     }
@@ -45,6 +51,65 @@ function iotModule() {
     this.endScene = function (id, callback) {
         changeSceneAction(id, STOP_ACTION, callback);
     }
+
+    this.makeOrder = function (amount, callback) {
+        order(amount, callback);
+    }
+
+    // private functions
+
+    // Call ecom api
+    var order = function (amount, callback) {
+        // mockup request
+        var mocOrderRequest = {
+            "address": "17A Nguyễn Thị Minh Khai, Bến Nghé, Quận 1, Hồ Chí Minh, Vietnam",
+            "longitude": 106.700632,
+            "latitude": 10.785387,
+            "sub_fee": 0,
+            "channel": "at_store",
+            "is_vat": false,
+            "pay_amount": 0,
+            "receive_amount": 0,
+            "branch_id": "e1d8bb70-f45e-11e7-b8a6-d51f40ca4e2d",
+            "employee_id": "e24ba180-f45e-11e7-b8a6-d51f40ca4e2d",
+            "customer_id": "82d82590-f4de-11e7-b8a6-d51f40ca4e2d",
+            "products": [
+                {
+                    "product_id": "5c56f0b0-f4e1-11e7-b8a6-d51f40ca4e2d",
+                    "amount": amount,
+                    "topping_value_ids": [
+                    ]
+                }
+            ]
+        }
+
+        var options = {
+            headers: {
+                'access_token': 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJwYXlsb2FkIjp7ImJyYW5kX2lkIjoiZTFiZjY3MTAtZjQ1ZS0xMWU3LWI4YTYtZDUxZjQwY2E0ZTJkIiwiZW1wbG95ZWVfaWQiOiJlMjRiYTE4MC1mNDVlLTExZTctYjhhNi1kNTFmNDBjYTRlMmQiLCJmaXJlYmFzZV90b2tlbiI6ImV5SmhiR2NpT2lKU1V6STFOaUlzSW5SNWNDSTZJa3BYVkNKOS5leUpqYkdGcGJYTWlPbnNpWW5KaGJtUmZhV1FpT2lKbE1XSm1OamN4TUMxbU5EVmxMVEV4WlRjdFlqaGhOaTFrTlRGbU5EQmpZVFJsTW1RaUxDSndaWEp0YVhOemFXOXVJam9pWVdSdGFXNGlmU3dpZFdsa0lqb2laVEkwWW1FeE9EQXRaalExWlMweE1XVTNMV0k0WVRZdFpEVXhaalF3WTJFMFpUSmtJaXdpYVdGMElqb3hOVEU1TnpFM01qZzRMQ0psZUhBaU9qRTFNVGszTWpBNE9EZ3NJbUYxWkNJNkltaDBkSEJ6T2k4dmFXUmxiblJwZEhsMGIyOXNhMmwwTG1kdmIyZHNaV0Z3YVhNdVkyOXRMMmR2YjJkc1pTNXBaR1Z1ZEdsMGVTNXBaR1Z1ZEdsMGVYUnZiMnhyYVhRdWRqRXVTV1JsYm5ScGRIbFViMjlzYTJsMElpd2lhWE56SWpvaVptbHlaV0poYzJVdFlXUnRhVzV6WkdzdGFURXhOR3hBWkdGemFHSnZZWEprTFhabGNuTnBiMjR0TWkwd0xtbGhiUzVuYzJWeWRtbGpaV0ZqWTI5MWJuUXVZMjl0SWl3aWMzVmlJam9pWm1seVpXSmhjMlV0WVdSdGFXNXpaR3N0YVRFeE5HeEFaR0Z6YUdKdllYSmtMWFpsY25OcGIyNHRNaTB3TG1saGJTNW5jMlZ5ZG1salpXRmpZMjkxYm5RdVkyOXRJbjAuUEk5d2Q1LTlEb192Tml4YlJXYnI3Y3l6N2hwd0U2RUtsZGdUTUhpRWhvMzN4ZExlNHJDNENrdTFVQVNuYmpNb0NHZGl1UThHV29jNHd4TlVFNWp0SFp2QThsaXVlN21lc04xR29zeVBpczc4QmN4T3lfbU0yNU1pWFFmMk9pSlFCd3FfNDNfSDg1Skk5QVdzVWFrdVJYVzVKRGdzUFY3bGRvbkQzODJwUGRVdmN5Zi1kcWZoN2ZCZ2VoZ0FNU0QtbnFGcWhmMVdaNUN4eGhxeGZJeHotTFV4dWFPLWQwVkpjazBMSS1NQktjdnd4OHhtNHdSa1p4SUQ4cDZ6Q1BrVWNOMHc3YUpYTFVnSkEzS0R1ZzVvVXpLRlBtYVpyeHRjMWxadjZxOG5MeU5yZHdRUUEtdGpTNHFiZmxtUmZWYU5MeGZiei1VZU9QZzJvRmpLM0QyckZnIn0sInJvbGVzIjpbImFkbWluIl0sImV4cCI6IjIwMTgtMDItMjhUMDc6NDE6MjguODI1WiJ9.hOxHoIimqMmT6Nh5b5im_Tm48IFCOeiWVbvqZ2zkk-I',
+                'Content-Type': 'application/json'
+            },
+
+            body: mocOrderRequest,
+            json: true
+        }
+
+        rxhttp.post(HOST_ECOM + '/bill/order_at_store', options)
+            .subscribe(
+            (data) => {
+                let code = data.response.statusCode;
+                if (code == 200) {
+                    callback(data.response.toJSON().body.results.object.bill);
+                } else {
+                    callback(null);
+                }
+            },
+            (err) => {
+                callback(null);
+            }
+            );
+
+    }
+
 
     this.askWiki = function (question, callback) {
         rxhttp.get('https://vi.wikipedia.org/w/api.php?action=opensearch&search=' + question + '&limit=1&format=json')
@@ -181,7 +246,7 @@ function iotModule() {
         );
     }
 
-    var parseWeatherResponse = function(response) {
+    var parseWeatherResponse = function (response) {
         let wid = response.weather[0].description; // id;
         let minTemp = response.main.temp_min;
         let maxTemp = response.main.temp_max;
@@ -198,16 +263,16 @@ function iotModule() {
             } else {
                 let min = convertToC(parseFloat(minTemp));
                 let max = convertToC(parseFloat(maxTemp));
-                build += 'Nhiệt độ thấp nhất ' +  min + ' độ. Nhiệt độ cao nhất ' + max + ' độ. ';
+                build += 'Nhiệt độ thấp nhất ' + min + ' độ. Nhiệt độ cao nhất ' + max + ' độ. ';
             }
         }
         if (humidity) {
-            build += 'Độ ẩm trung bình ' +  humidity + '%. ';
+            build += 'Độ ẩm trung bình ' + humidity + '%. ';
         }
         return build;
     }
 
-    var convertToC = function(temp) {
+    var convertToC = function (temp) {
         return temp - 273.15;
     }
 

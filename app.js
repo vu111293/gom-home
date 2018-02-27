@@ -133,6 +133,8 @@ const ASK_WIKI_ACTION = 'question_wiki';
 const UBER_REQUEST_ACTION = 'uber_request';
 const ASK_WEATHER_ACTION = 'question_weather';
 
+const PAYMENT_ACTION = 'payment';
+
 
 let actionMap = new Map();
 actionMap.set(QUIT_ACTION, quit);
@@ -150,6 +152,7 @@ actionMap.set(ASK_WIKI_ACTION, askWiki);
 actionMap.set(UBER_REQUEST_ACTION, uberRequest);
 actionMap.set(ASK_WEATHER_ACTION, askWeather);
 
+actionMap.set(PAYMENT_ACTION, makeOrder);
 
 var iot = new iotModule();
 app.post('/', function (request, response) {
@@ -413,6 +416,22 @@ function askWeather(app) {
     })
 }
 
+function makeOrder(app) {
+    let amount = app.getArgument('amount');
+    iot.makeOrder(amount, function (response) {
+        if (response) {
+            // parse result
+            let totalPrice = response.total_price;
+            let address = response.address;
+            let time = response.created_at;
+            let id = response.id.substring(0, 5) + '...' + response.id.substring(response.id.length - 5);
+            app.ask('Bill ' + id + ' đã tạo thành công. Tổng bill là ' + totalPrice + ', được giao đến ' + address);
+        } else {
+            app.ask('Xãy ra lỗi khi thanh toán');
+        }
+    });
+}
+
 // function generateAnswer(app) {
 //     console.log('generateAnswer');
 //     var answer = getRandomNumber(0, 100);
@@ -526,7 +545,6 @@ function findSceneId(raw) {
     }
     return sceneId;
 }
-
 
 // utils function
 function ask(app, strName) {
