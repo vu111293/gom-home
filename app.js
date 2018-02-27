@@ -418,6 +418,11 @@ function askWeather(app) {
 
 function makeOrder(app) {
     let amount = app.getArgument('amount');
+    if (amount == null) {
+        app.ask('Thiếu số lượng');
+        return;
+    }
+
     iot.makeOrder(amount, function (response) {
         if (response) {
             // parse result

@@ -76,7 +76,7 @@ function iotModule() {
             "products": [
                 {
                     "product_id": "5c56f0b0-f4e1-11e7-b8a6-d51f40ca4e2d",
-                    "amount": amount,
+                    "amount": parseInt(amount),
                     "topping_value_ids": [
                     ]
                 }
