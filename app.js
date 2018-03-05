@@ -452,7 +452,7 @@ function defaultFallback(app) {
         app.ask('Lệnh không hợp lệ. Gọi tên hành động kèm thiết bị muốn thực hiện');
     } else {
         app.data.fallbackCount = 0;
-        tellRaw('Gọi nhà cung cấp để được hổ trợ');
+        tellRaw(app, 'Gọi nhà cung cấp để được hổ trợ');
     }
 }
 
