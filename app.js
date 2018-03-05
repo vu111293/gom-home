@@ -288,7 +288,7 @@ function signInHandler(app) {
 function welcome(app) {
     // signInHandler(app);
     // app.ask('Nice to meet u. I\'m ding dong. Can i help u?');
-    app.ask('Hi. Tôi là em hôm.Tôi có thể giúp gì cho bạn?');
+    app.ask('Hi. Tôi là em hôm. Tôi có thể giúp gì cho bạn?');
 }
 
 function turnOnDevice(app) {
@@ -398,9 +398,9 @@ function uberRequest(app) {
     let to = app.getArgument('to');
 
     if (from == null) {
-        ask(app, 'uber_start');
+        ask(app, 'uber_from');
     } else if (to == null) {
-        ask(app, 'uber_end');
+        ask(app, 'uber_to');
     } else {
         tellRaw(app, slib.translate('uber_response $[1] $[2]', from, to));
     }
@@ -437,45 +437,6 @@ function makeOrder(app) {
     });
 }
 
-// function generateAnswer(app) {
-//     console.log('generateAnswer');
-//     var answer = getRandomNumber(0, 100);
-//     app.data.answer = answer;
-//     app.data.guessCount = 0;
-//     app.data.fallbackCount = 0;
-//     app.ask(sprintf(getRandomPrompt(app, GREETING_PROMPTS) + ' '
-//         + getRandomPrompt(app, INVOCATION_PROMPT), MIN, MAX));
-// }
-
-// function checkGuess(app) {
-//     console.log('checkGuess');
-//     let answer = app.data.answer;
-//     let guess = parseInt(app.getArgument('guess'));
-//     if (app.data.hint) {
-//         if (app.data.hint === 'higher' && guess <= app.data.previousGuess) {
-//             app.ask('Nice try, but it’s still higher than ' + app.data.previousGuess);
-//             return;
-//         } else if (app.data.hint === 'lower' && guess >= app.data.previousGuess) {
-//             app.ask('Nice try, but it’s still lower than ' + app.data.previousGuess);
-//             return;
-//         }
-//     }
-//     if (answer > guess) {
-//         app.data.hint = 'higher';
-//         app.data.previousGuess = guess;
-//         app.ask('It\'s higher than ' + guess + '. What\'s your next guess?');
-//     } else if (answer < guess) {
-//         app.data.hint = 'lower';
-//         app.data.previousGuess = guess;
-//         app.ask('It\'s lower than ' + guess + '. Next guess?');
-//     } else {
-//         app.data.hint = 'none';
-//         app.data.previousGuess = -1;
-//         app.setContext('yes_no');
-//         app.ask('Congratulations, that\'s it! I was thinking of ' + answer + '. Wanna play again?');
-//     }
-// }
-
 function quit(app) {
     console.log('quit');
     let answer = app.data.answer;
@@ -485,11 +446,13 @@ function quit(app) {
 function defaultFallback(app) {
     console.log('defaultFallback');
     app.data.fallbackCount++;
-    if (app.data.fallbackCount == 1) {
-        app.setContext('done_yes_no');
-        app.ask('Are you done playing Number Genie?');
+    if (app.data.fallbackCount < 2) {
+        app.ask('Vui lòng nhắc lại');
+    } else if (app.data.fallbackCount < 3) {
+        app.ask('Lệnh không hợp lệ. Gọi tên hành động kèm thiết bị muốn thực hiện');
     } else {
-        app.tell('We can stop here. Let’s play again soon.');
+        app.data.fallbackCount = 0;
+        tellRaw('Gọi nhà cung cấp để được hổ trợ');
     }
 }
 
@@ -565,9 +528,9 @@ function askRaw(app, raw) {
 }
 
 function tell(app, strName) {
-    app.tell("(end)" + slib.translate(strName));
+    app.tell("*end*" + slib.translate(strName));
 }
 
 function tellRaw(app, raw) {
-    app.tell("(end)" + raw);
+    app.tell("*end*" + raw);
 }
