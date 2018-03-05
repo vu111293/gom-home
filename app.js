@@ -445,7 +445,12 @@ function quit(app) {
 
 function defaultFallback(app) {
     console.log('defaultFallback');
+
+    if (app.data.fallbackCount == null) {
+        app.data.fallbackCount = 0;
+    }
     app.data.fallbackCount++;
+    
     if (app.data.fallbackCount < 2) {
         app.ask('Vui lòng nhắc lại');
     } else if (app.data.fallbackCount < 3) {
