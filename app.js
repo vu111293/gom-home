@@ -11,7 +11,6 @@ let App = require('actions-on-google').DialogflowApp;
 let express = require('express');
 let bodyParse = require('body-parser');
 let sprintf = require('sprintf-js').sprintf;
-let iotModule = require('./iotserver/iotapi');
 let localize = require('localize');
 let url = require('url');
 var Promise = require('promise');
@@ -19,6 +18,7 @@ let request = require('request')
 
 // net lib
 let rxhttp = require('rx-http-request').RxHttpRequest;
+const externalApis = require('./iotserver/ExtentionAPIs');
 
 // firebase lib
 let firebase = require('firebase-admin');
@@ -122,22 +122,6 @@ const QUIT_ACTION = 'quit';
 const WELLCOM_ACTION = 'input.welcome';
 const DEFAULT_FALLBACK_ACTION = 'input.unknown';
 
-// IOT action group
-const TURNON_DEVICE_ACTION = 'device_on';
-const TURNOFF_DEVICE_ACTION = 'device_off';
-
-const START_SCENE_ACTION = 'scene_start';
-const END_SCENE_ACTION = 'scene_end';
-
-// Device controller
-const TURNUP_VOLUMN_ACTION = 'volumn_up';
-const TURNDOWN_VOLUMN_ACTION = 'volumn_down';
-
-const SET_ALARM_ACTION = 'set_alarm';
-const ASK_WIKI_ACTION = 'question_wiki';
-const UBER_REQUEST_ACTION = 'uber_request';
-const ASK_WEATHER_ACTION = 'question_weather';
-
 const PAYMENT_ACTION = 'payment';
 
 
@@ -145,57 +129,29 @@ let actionMap = new Map();
 actionMap.set(QUIT_ACTION, quit);
 actionMap.set(WELLCOM_ACTION, welcome)
 actionMap.set(DEFAULT_FALLBACK_ACTION, defaultFallback);
-
-// actionMap.set(TURNON_DEVICE_ACTION, turnOnDevice);
-// actionMap.set(TURNOFF_DEVICE_ACTION, turnOffDevice);
-
-// actionMap.set(START_SCENE_ACTION, startScene);
-// actionMap.set(END_SCENE_ACTION, endScene);
-
-actionMap.set(SET_ALARM_ACTION, setAlarm);
-// actionMap.set(ASK_WIKI_ACTION, askWiki);
-actionMap.set(UBER_REQUEST_ACTION, uberRequest);
-actionMap.set(ASK_WEATHER_ACTION, askWeather);
-
 actionMap.set(PAYMENT_ACTION, makeOrder);
 
-var iot = new iotModule();
 agent.post('/', function (request, response) {
-
     const agent = new WebhookClient({ request, response });
     console.log('Dialogflow Request headers: ' + JSON.stringify(request.headers));
     console.log('Dialogflow Request body: ' + JSON.stringify(request.body));
 
-    // let accessToken = request.body.originalRequest.data.user.accessToken;
-    // let userId = request.body.originalRequest.data.user.userId;
-
-    // if (accessToken) {
-    //     console.log('accessToken is ' + accessToken);
-    //     console.log('userId is ' + userId);
-    // }
-    // const app = new App({ request: request, response: response });
-    // app.handleRequest(actionMap);
-
-
     // Run the proper handler based on the matched Dialogflow intent
     let intentMap = new Map();
-    // intentMap.set('Default Welcome Intent', welcome);
-    // intentMap.set('Default Fallback Intent', fallback);
-    // intentMap.set('ask-product-order', askProducForOrder);
+    intentMap.set('Default Fallback Intent', defaultFallback);
+    intentMap.set('Default Welcome Intent', welcome);
+    intentMap.set('quit_facts', quit);
     intentMap.set('device_on_action', turnOnDevice);
     intentMap.set('device_off_action', turnOffDevice);
     intentMap.set('scene_start_action', startScene);
     intentMap.set('scene_end_action', endScene);
     intentMap.set('question_wiki', askWiki);
+    intentMap.set('question_weather', askWeather);
+    intentMap.set('set_alarm', setAlarm);
+    intentMap.set('request_uber', uberRequest);
+    intentMap.set('mhome_volumn_up', volumUpHandler);
+    intentMap.set('mhome_volumn_down', volumDownHandler);
 
-    // help handler
-    // intentMap.set('help-request', helpRequest);
-
-    // if (agent.requestSource === agent.ACTIONS_ON_GOOGLE) {
-    //     intentMap.set(null, googleAssistantOther);
-    // } else {
-    //     intentMap.set(null, other);
-    // }
     agent.handleRequest(intentMap);
 });
 
@@ -308,11 +264,8 @@ function signInHandler(app) {
     }
 }
 
-// call iot api
-function welcome(app) {
-    // signInHandler(app);
-    // app.ask('Nice to meet u. I\'m ding dong. Can i help u?');
-    app.ask('Hi. Tôi là em hôm. Tôi có thể giúp gì cho bạn?');
+function welcome(agent) {
+    agent.add('Hi. Tôi là em hôm. Tôi có thể giúp gì cho bạn?');
 }
 
 function turnOnDevice(agent) {
@@ -391,118 +344,53 @@ function endScene(agent) {
     }
 }
 
-function setAlarm(app) {
-    var hour = app.getArgument('hour');
-    var minute = app.getArgument('minute');
-    var time = app.getArgument('alarm_time');
+function setAlarm(agent) {
+    var hour = agent.parameters['hour'];
+    var minute = agent.parameters['minute'];
+    var time = agent.parameters['alarm_time'];
 
     if (hour) {
         if (minute && time) {
-            tellRaw(app, slib.translate('set_hour_and_minute $[1] $[2]', hour, minute));
-            // app.tell("Đã đặt báo thức lúc " + hour + " giờ " + minute + " phút " + time);
+            agent.add(slib.translate('set_hour_and_minute $[1] $[2]', hour, minute));
         } else if (minute) {
-            tellRaw(app, slib.translate('set_hour_and_minute $[1] $[2]', hour, minute));
+            agent.add(slib.translate('set_hour_and_minute $[1] $[2]', hour, minute));
         } else {
-            tellRaw(app, slib.translate('set_hour_only $[1]', hour));
+            agent.add(slib.translate('set_hour_only $[1]', hour));
         }
-
     } else {
-        ask(app, 'ask_alarm');
+        agent.add('Không thể đặt báo thức');
     }
-}
-
-function callAPIAskWiki() {
-    return new Promise((resolve, reject) => {
-        console.log("@start promise");
-        iot.askWiki(question, function (response) {
-            if (response) {
-                console.log("@response ok");
-                resolve(response);
-            } else {
-                console.log("@response fail");
-                reject('Không tìm thấy kết quả');
-            }
-        });
-    });
 }
 
 function askWiki(agent) {
     var question = agent.parameters['query'];
     if (question) {
-        let response;
-        callAPIAskWiki().then(res => {
-            response = res;
-        }).catch(err=>{
-            
-        });
-        let promise = new Promise(function (resolve, reject) {
-
-            // resolve("Ok fine");
-            // agent.add("fail nhe1");
-
-            console.log("@start promise");
-            iot.askWiki(question, function (response) {
-                if (response) {
-                    console.log("@response ok");
-                    resolve(response);
-                } else {
-                    console.log("@response fail");
-                    resolve('Không tìm thấy kết quả');
-                }
-            });
-        });
-
-        // return promise;
-
-        return Promise.resolve(promise).then(
-            data => {
-                console.log("@end ok");
-                agent.add(data);
-            }).catch(
-                err => {
-                    console.log("@end err");
-                    agent.add(err);
-                });
-
-        // agent.send("asdasd");
-        // return Promise.resolve("asdasdasdasd").then(data => agent.add("done task")).catch(err => agent.add("err"));
-        //     if (response) {
-        //         console.log(response);
-        //         agent.add("asdasdajhsdbasd");
-        //         // tellRaw(agent, response);
-        //     } else {
-        //         agent.add('Không tìm thấy kết quả');
-        //         // tell(agent, 'not_found_result');
-        //     }
-        // });
-        // agent.add("done");
+        return externalApis.callAPIAskWiki(question)
+            .then(data => agent.add(data))
+            .catch(err => agent.add(err));
     } else {
         agent.add('Vui lòng nhắc lại');
-        // ask(agent, 'ask_info');
     }
 }
 
-function uberRequest(app) {
-    let from = app.getArgument('from');
-    let to = app.getArgument('to');
-
-    if (from == null) {
-        ask(app, 'uber_from');
-    } else if (to == null) {
-        ask(app, 'uber_to');
-    } else {
-        tellRaw(app, slib.translate('uber_response $[1] $[2]', from, to));
-    }
+function uberRequest(agent) {
+    let from = agent.parameters['from'];
+    let to = agent.parameters['to'];
+    agent.add(slib.translate('uber_response $[1] $[2]', from, to));
 }
 
-function askWeather(app) {
-    iot.askWeather(function (response) {
-        if (response) {
-            tellRaw(app, response);
-        } else {
-            tell(app, 'not_found_result');
-        }
-    })
+function volumUpHandler(agent) {
+    agent.add('Đã tăng âm lượng');
+}
+
+function volumDownHandler(agent) {
+    agent.add('Đã giảm âm lượng');
+}
+
+function askWeather(agent) {
+    return externalApis.callAPIAskWeather()
+        .then(res => agent.add(res))
+        .catch(err => agent.add(err));
 }
 
 function makeOrder(app) {
@@ -526,28 +414,12 @@ function makeOrder(app) {
     });
 }
 
-function quit(app) {
-    console.log('quit');
-    let answer = app.data.answer;
-    app.tell('Ok, I was thinking of ' + answer + '. See your later');
+function quit(agent) {
+    agent.add('Ok, I was thinking of fall in love. See your later');
 }
 
-function defaultFallback(app) {
-    console.log('defaultFallback');
-
-    if (app.data.fallbackCount == null) {
-        app.data.fallbackCount = 0;
-    }
-    app.data.fallbackCount++;
-
-    if (app.data.fallbackCount < 2) {
-        app.ask('Vui lòng nhắc lại');
-    } else if (app.data.fallbackCount < 3) {
-        app.ask('Lệnh không hợp lệ. Gọi tên hành động kèm thiết bị muốn thực hiện');
-    } else {
-        app.data.fallbackCount = 0;
-        tellRaw(app, 'Gọi nhà cung cấp để được hổ trợ');
-    }
+function defaultFallback(agent) {
+    agent.add('Vui lòng thử lại');
 }
 
 // Support methods
@@ -606,25 +478,4 @@ function findSceneId(raw) {
         console.log("find scene id #" + sceneId);
     }
     return sceneId;
-}
-
-// utils function
-function ask(app, strName) {
-    if (strName == null) {
-        app.ask("");
-        return;
-    }
-    app.ask(slib.translate(strName));
-}
-
-function askRaw(app, raw) {
-    app.ask(raw);
-}
-
-function tell(app, strName) {
-    app.tell("*end*" + slib.translate(strName));
-}
-
-function tellRaw(app, raw) {
-    app.tell("*end*" + raw);
 }
