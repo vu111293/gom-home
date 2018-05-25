@@ -14,12 +14,16 @@
     "deploy": "gcloud app deploy"
   },
   "dependencies": {
+    "actions-on-google": "2.0.0-alpha.4",
+    "bluebird": "^3.5.1",
     "body-parser": "^1.15.2",
+    "dialogflow-fulfillment": "0.3.0-beta.1",
     "express": "^4.13.4",
-    "sprintf-js": "^1.0.3",
-    "actions-on-google": "^1.0.0",
-    "firebase-admin": "^4.0.3",
+    "firebase-admin": "^5.10.0",
+    "localize": "^0.4.7",
+    "mqtt": "^2.17.0",
+    "promise": "^8.0.1",
     "rx-http-request": "^1.2.0",
-    "localize": "^0.4.7"
+    "sprintf-js": "^1.0.3"
   }
 }

@@ -3,6 +3,10 @@
 // Enable actions client library debugging
 process.env.DEBUG = 'actions-on-google:*';
 
+// const { WebhookClient } = require('dialogflow-fulfillment');
+const { WebhookClient } = require('./dialogflow/dialogflow-fulfillment');
+const { Card, Suggestion, Image, Text, Payload } = require('dialogflow-fulfillment');
+
 let App = require('actions-on-google').DialogflowApp;
 let express = require('express');
 let bodyParse = require('body-parser');
@@ -10,6 +14,8 @@ let sprintf = require('sprintf-js').sprintf;
 let iotModule = require('./iotserver/iotapi');
 let localize = require('localize');
 let url = require('url');
+var Promise = require('promise');
+let request = require('request')
 
 // net lib
 let rxhttp = require('rx-http-request').RxHttpRequest;
@@ -104,12 +110,11 @@ let slib = new localize({
 
 
 slib.setLocale('vi');
-let app = express();
-app.set('port', (process.env.PORT || 8080));
-app.use(bodyParse.json({ type: 'application/json' }));
+let agent = express();
+agent.set('port', (process.env.PORT || 8080));
+agent.use(bodyParse.json({ type: 'application/json' }));
 
 const MAX = 100;
-
 const HOST_IOT = 'http://mhome-showroom.ddns.net/api';
 
 // Default action
@@ -141,43 +146,62 @@ actionMap.set(QUIT_ACTION, quit);
 actionMap.set(WELLCOM_ACTION, welcome)
 actionMap.set(DEFAULT_FALLBACK_ACTION, defaultFallback);
 
-actionMap.set(TURNON_DEVICE_ACTION, turnOnDevice);
-actionMap.set(TURNOFF_DEVICE_ACTION, turnOffDevice);
+// actionMap.set(TURNON_DEVICE_ACTION, turnOnDevice);
+// actionMap.set(TURNOFF_DEVICE_ACTION, turnOffDevice);
 
-actionMap.set(START_SCENE_ACTION, startScene);
-actionMap.set(END_SCENE_ACTION, endScene);
+// actionMap.set(START_SCENE_ACTION, startScene);
+// actionMap.set(END_SCENE_ACTION, endScene);
 
 actionMap.set(SET_ALARM_ACTION, setAlarm);
-actionMap.set(ASK_WIKI_ACTION, askWiki);
+// actionMap.set(ASK_WIKI_ACTION, askWiki);
 actionMap.set(UBER_REQUEST_ACTION, uberRequest);
 actionMap.set(ASK_WEATHER_ACTION, askWeather);
 
 actionMap.set(PAYMENT_ACTION, makeOrder);
 
 var iot = new iotModule();
-app.post('/', function (request, response) {
-    console.log('header: ' + JSON.stringify(request.headers));
-    console.log('body: ' + JSON.stringify(response.body));
+agent.post('/', function (request, response) {
+
+    const agent = new WebhookClient({ request, response });
+    console.log('Dialogflow Request headers: ' + JSON.stringify(request.headers));
+    console.log('Dialogflow Request body: ' + JSON.stringify(request.body));
+
     // let accessToken = request.body.originalRequest.data.user.accessToken;
     // let userId = request.body.originalRequest.data.user.userId;
-    
+
     // if (accessToken) {
     //     console.log('accessToken is ' + accessToken);
     //     console.log('userId is ' + userId);
     // }
+    // const app = new App({ request: request, response: response });
+    // app.handleRequest(actionMap);
 
-    const app = new App({ request: request, response: response });
-    // console.log('Token: ' + app.getUser().accessToken);
-    // const userId = app.getUser().userId;
-    // console.log(userId);
 
-    app.handleRequest(actionMap);
-    // response.sendStatus(200); // reponse OK
+    // Run the proper handler based on the matched Dialogflow intent
+    let intentMap = new Map();
+    // intentMap.set('Default Welcome Intent', welcome);
+    // intentMap.set('Default Fallback Intent', fallback);
+    // intentMap.set('ask-product-order', askProducForOrder);
+    intentMap.set('device_on_action', turnOnDevice);
+    intentMap.set('device_off_action', turnOffDevice);
+    intentMap.set('scene_start_action', startScene);
+    intentMap.set('scene_end_action', endScene);
+    intentMap.set('question_wiki', askWiki);
+
+    // help handler
+    // intentMap.set('help-request', helpRequest);
+
+    // if (agent.requestSource === agent.ACTIONS_ON_GOOGLE) {
+    //     intentMap.set(null, googleAssistantOther);
+    // } else {
+    //     intentMap.set(null, other);
+    // }
+    agent.handleRequest(intentMap);
 });
 
 // create application/x-www-form-urlencoded parser
 var urlencodedParser = bodyParse.urlencoded({ extended: false })
-app.post('/token', urlencodedParser, function (request, response) {
+agent.post('/token', urlencodedParser, function (request, response) {
     let clientId = request.body.client_id;
     let clientSecret = request.body.client_secret;
     let grantType = request.body['grant_type'];
@@ -211,7 +235,7 @@ app.post('/token', urlencodedParser, function (request, response) {
     }
 });
 
-app.get('/auth', function (request, response) {
+agent.get('/auth', function (request, response) {
     console.log('auth called');
     let responseType = request.query['response_type'];
     let clientId = request.query['client_id'];
@@ -247,7 +271,7 @@ function startListeners() {
 
 
 // Start the server
-var server = app.listen(app.get('port'), function () {
+var server = agent.listen(agent.get('port'), function () {
     console.log('App host %s', server.address().address);
     console.log('App listening on port %s', server.address().port);
     console.log('Press Ctrl+C to quit.');
@@ -291,70 +315,79 @@ function welcome(app) {
     app.ask('Hi. Tôi là em hôm. Tôi có thể giúp gì cho bạn?');
 }
 
-function turnOnDevice(app) {
+function turnOnDevice(agent) {
     // signInHandler(app);
-    let dname = app.getArgument('device_name');
+    let dname = agent.parameters['device_name'];
     var id = findDeviceId(dname);
     if (id) {
-        iot.turnOnDevice(id, function (code) {
-            if (code == 202) {
-                tellRaw(app, slib.translate('turn_on_device $[1]', dname));
-            } else {
-                ask(app, 'err_iot_server');
-            }
-        });
+        agent.add(dname + ' đã được mở');
+        // iot.turnOnDevice(id, function (code) {
+        //     if (code == 202) {
+        //         tellRaw(agent, slib.translate('turn_on_device $[1]', dname));
+        //     } else {
+        //         ask(agent, 'err_iot_server');
+        //     }
+        // });
     } else {
-        askRaw(app, slib.translate('device_not_found $[1]', dname));
+        // askRaw(agent, slib.translate('device_not_found $[1]', dname));
+        agent.add('Không tìm thấy ' + dname);
         // ask(app, 'device_not_found');
     }
 }
 
-function turnOffDevice(app) {
-    let dname = app.getArgument('device_name');
+function turnOffDevice(agent) {
+    let dname = agent.parameters['device_name'];
     var id = findDeviceId(dname);
     if (id) {
-        iot.turnOffDevice(id, function (code) {
-            if (code == 202) {
-                tellRaw(app, slib.translate('turn_off_device $[1]', dname));
-            } else {
-                ask(app, 'err_iot_server');
-            }
-        });
+        // agent.setContext({ name: 'endconv', lifespan: 0, parameters: null });
+        agent.add(dname + ' đã được tắt.');
+        // iot.turnOffDevice(id, function (code) {
+        //     if (code == 202) {
+        //         tellRaw(app, slib.translate('turn_off_device $[1]', dname));
+        //     } else {
+        //         ask(app, 'err_iot_server');
+        //     }
+        // });
     } else {
-        askRaw(app, slib.translate('device_not_found $[1]', dname));
+        agent.add('Không tìm thấy ' + dname + '.');
+        // askRaw(app, slib.translate('device_not_found $[1]', dname));
     }
 }
 
-function startScene(app) {
-    var sceneName = app.getArgument('scene_name');
+function startScene(agent) {
+    var sceneName = agent.parameters['scene_name'];
     var id = findSceneId(sceneName);
     if (id) {
-        iot.startScene(id, function (code) {
-            if (code == 202) {
-                tellRaw(app, slib.translate('turn_on_scene $[1]', sceneName));
-            } else {
-                ask(app, 'err_iot_server');
-            }
-        });
+        agent.add('Đã thực hiện ' + sceneName);
+        // iot.startScene(id, function (code) {
+        //     if (code == 202) {
+        //         tellRaw(agent, slib.translate('turn_on_scene $[1]', sceneName));
+        //     } else {
+        //         ask(agent, 'err_iot_server');
+        //     }
+        // });
     } else {
-        askRaw(app, slib.translate('scene_not_found $[1]', sceneName));
+        // askRaw(app, slib.translate('scene_not_found $[1]', sceneName));
+        agent.add('Không tìm thấy ' + sceneName);
         // app.ask("Hiệu ứng không được tìm thấy hoặc chưa thiết lập");
     }
 }
 
-function endScene(app) {
-    let sceneName = app.getArgument('scene_name');
+function endScene(agent) {
+    let sceneName = agent.parameters['scene_name'];
     var id = findSceneId(sceneName);
     if (id) {
-        iot.endScene(id, function (code) {
-            if (code == 202) {
-                tellRaw(app, slib.translate('turn_off_scene $[1]', sceneName));
-            } else {
-                ask(app, 'err_iot_server');
-            }
-        });
+        agent.add('Đã kết thúc ' + sceneName);
+        // iot.endScene(id, function (code) {
+        //     if (code == 202) {
+        //         tellRaw(agent, slib.translate('turn_off_scene $[1]', sceneName));
+        //     } else {
+        //         ask(agent, 'err_iot_server');
+        //     }
+        // });
     } else {
-        askRaw(app, slib.translate('scene_not_found $[1]', sceneName));
+        agent.add('Không tìm thấy ' + sceneName);
+        // askRaw(agent, slib.translate('scene_not_found $[1]', sceneName));
     }
 }
 
@@ -378,18 +411,74 @@ function setAlarm(app) {
     }
 }
 
-function askWiki(app) {
-    var question = app.getArgument('query');
-    if (question) {
+function callAPIAskWiki() {
+    return new Promise((resolve, reject) => {
+        console.log("@start promise");
         iot.askWiki(question, function (response) {
             if (response) {
-                tellRaw(app, response);
+                console.log("@response ok");
+                resolve(response);
             } else {
-                tell(app, 'not_found_result');
+                console.log("@response fail");
+                reject('Không tìm thấy kết quả');
             }
         });
+    });
+}
+
+function askWiki(agent) {
+    var question = agent.parameters['query'];
+    if (question) {
+        let response;
+        callAPIAskWiki().then(res => {
+            response = res;
+        }).catch(err=>{
+            
+        });
+        let promise = new Promise(function (resolve, reject) {
+
+            // resolve("Ok fine");
+            // agent.add("fail nhe1");
+
+            console.log("@start promise");
+            iot.askWiki(question, function (response) {
+                if (response) {
+                    console.log("@response ok");
+                    resolve(response);
+                } else {
+                    console.log("@response fail");
+                    resolve('Không tìm thấy kết quả');
+                }
+            });
+        });
+
+        // return promise;
+
+        return Promise.resolve(promise).then(
+            data => {
+                console.log("@end ok");
+                agent.add(data);
+            }).catch(
+                err => {
+                    console.log("@end err");
+                    agent.add(err);
+                });
+
+        // agent.send("asdasd");
+        // return Promise.resolve("asdasdasdasd").then(data => agent.add("done task")).catch(err => agent.add("err"));
+        //     if (response) {
+        //         console.log(response);
+        //         agent.add("asdasdajhsdbasd");
+        //         // tellRaw(agent, response);
+        //     } else {
+        //         agent.add('Không tìm thấy kết quả');
+        //         // tell(agent, 'not_found_result');
+        //     }
+        // });
+        // agent.add("done");
     } else {
-        ask(app, 'ask_info');
+        agent.add('Vui lòng nhắc lại');
+        // ask(agent, 'ask_info');
     }
 }
 
@@ -450,7 +539,7 @@ function defaultFallback(app) {
         app.data.fallbackCount = 0;
     }
     app.data.fallbackCount++;
-    
+
     if (app.data.fallbackCount < 2) {
         app.ask('Vui lòng nhắc lại');
     } else if (app.data.fallbackCount < 3) {
