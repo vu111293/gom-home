@@ -5,6 +5,8 @@ let sprintf = require('sprintf-js').sprintf;
 const HOST_OPEN_WEATHER = 'http://api.openweathermap.org/data/2.5/weather';
 const WEATHER_LOCATION_ID = '1580578';
 const OPEN_WEATHER_APP_ID = '4087bd8be866da223189a20f0d3e2f55';
+const AUTHENTICATION_ECOM_SERVER = 'Basic a3l0aHVhdEBraW1zb250aWVuLmNvbTpDaG90cm9ubmllbXZ1aTE=';
+
 
 class ExtentionAPIs {
 
@@ -60,6 +62,46 @@ class ExtentionAPIs {
         });
     }
 
+    changeDevice (id, action) {
+        var options = {
+            qs: {
+                'deviceID': id, // -> uri + '?access_token=xxxxx%20xxxxx'
+                'name': action
+            },
+            headers: {
+                'Authorization': AUTHENTICATION_IOT_SERVER
+            },
+            json: true
+        };
+
+        return new Promise(function (resolve, reject) {
+            rxhttp.get(HOST_IOT + "/callAction", options).subscribe(
+                (data) => resolve(data.response.statusCode),
+                (err) => reject("Error")
+            );
+        });
+    }
+
+    changeScene (id, action) {
+        var options = {
+            qs: {
+                'id': id,
+                'action': action
+            },
+            headers: {
+                'Authorization': AUTHENTICATION_IOT_SERVER
+            },
+            json: true
+        };
+
+        return new Promise(function (resolve, reject) {
+            rxhttp.get(HOST_IOT + "/sceneControl", options).subscribe(
+                (data) => resolve(data.response.statusCode),
+                (err) => reject("Error")
+            );
+        });
+        
+    }
     
 }
 

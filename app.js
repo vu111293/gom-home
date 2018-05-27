@@ -7,6 +7,16 @@ process.env.DEBUG = 'actions-on-google:*';
 const { WebhookClient } = require('./dialogflow/dialogflow-fulfillment');
 const { Card, Suggestion, Image, Text, Payload } = require('dialogflow-fulfillment');
 
+const TURNON_ACTION = 'turnOn';
+const TURNOFF_ACTION = 'turnOff';
+const START_ACTION = 'start';
+const STOP_ACTION = 'stop';
+const PRESS_BUTTON_ACTION = 'pressButton';
+const SET_SLIDER_ACTION = 'setSlider';
+const SET_COLOR_ACTION = 'setColor';
+const OPEN_ACTION = 'open';
+const CLOSE_ACTION = 'close';
+
 let App = require('actions-on-google').DialogflowApp;
 let express = require('express');
 let bodyParse = require('body-parser');
@@ -265,7 +275,7 @@ function signInHandler(app) {
 }
 
 function welcome(agent) {
-    agent.add('Hi. Tôi là em hôm. Tôi có thể giúp gì cho bạn?');
+    agent.add('Hi. Tôi là em hôm. Bạn cần giúp gì?');
 }
 
 function turnOnDevice(agent) {
@@ -273,18 +283,11 @@ function turnOnDevice(agent) {
     let dname = agent.parameters['device_name'];
     var id = findDeviceId(dname);
     if (id) {
-        agent.add(dname + ' đã được mở');
-        // iot.turnOnDevice(id, function (code) {
-        //     if (code == 202) {
-        //         tellRaw(agent, slib.translate('turn_on_device $[1]', dname));
-        //     } else {
-        //         ask(agent, 'err_iot_server');
-        //     }
-        // });
+        return externalApis.changeDevice(id, TURNON_ACTION)
+            .then(data => agent.add(dname + ' đã được mở'))
+            .catch(err => agent.add('Xãy ra lỗi khi mở thiết bị'));
     } else {
-        // askRaw(agent, slib.translate('device_not_found $[1]', dname));
         agent.add('Không tìm thấy ' + dname);
-        // ask(app, 'device_not_found');
     }
 }
 
@@ -292,18 +295,11 @@ function turnOffDevice(agent) {
     let dname = agent.parameters['device_name'];
     var id = findDeviceId(dname);
     if (id) {
-        // agent.setContext({ name: 'endconv', lifespan: 0, parameters: null });
-        agent.add(dname + ' đã được tắt.');
-        // iot.turnOffDevice(id, function (code) {
-        //     if (code == 202) {
-        //         tellRaw(app, slib.translate('turn_off_device $[1]', dname));
-        //     } else {
-        //         ask(app, 'err_iot_server');
-        //     }
-        // });
+        return externalApis.changeDevice(id, TURNOFF_ACTION)
+            .then(data => agent.add(dname + ' đã được tắt'))
+            .catch(err => agent.add('Xãy ra lỗi khi tắt thiết bị'));
     } else {
         agent.add('Không tìm thấy ' + dname + '.');
-        // askRaw(app, slib.translate('device_not_found $[1]', dname));
     }
 }
 
@@ -311,18 +307,11 @@ function startScene(agent) {
     var sceneName = agent.parameters['scene_name'];
     var id = findSceneId(sceneName);
     if (id) {
-        agent.add('Đã thực hiện ' + sceneName);
-        // iot.startScene(id, function (code) {
-        //     if (code == 202) {
-        //         tellRaw(agent, slib.translate('turn_on_scene $[1]', sceneName));
-        //     } else {
-        //         ask(agent, 'err_iot_server');
-        //     }
-        // });
+        return externalApis.changeScene(id, START_ACTION)
+            .then(data => agent.add('Đã thực hiện ' + sceneName))
+            .catch(err => agent.add('Không thể thực hiện hiệu ứng'));
     } else {
-        // askRaw(app, slib.translate('scene_not_found $[1]', sceneName));
         agent.add('Không tìm thấy ' + sceneName);
-        // app.ask("Hiệu ứng không được tìm thấy hoặc chưa thiết lập");
     }
 }
 
@@ -330,17 +319,11 @@ function endScene(agent) {
     let sceneName = agent.parameters['scene_name'];
     var id = findSceneId(sceneName);
     if (id) {
-        agent.add('Đã kết thúc ' + sceneName);
-        // iot.endScene(id, function (code) {
-        //     if (code == 202) {
-        //         tellRaw(agent, slib.translate('turn_off_scene $[1]', sceneName));
-        //     } else {
-        //         ask(agent, 'err_iot_server');
-        //     }
-        // });
+        return externalApis.changeScene(id, START_ACTION)
+            .then(data => agent.add('Đã kết thúc ' + sceneName))
+            .catch(err => agent.add('Không thể thực hiện hiệu ứng'));
     } else {
         agent.add('Không tìm thấy ' + sceneName);
-        // askRaw(agent, slib.translate('scene_not_found $[1]', sceneName));
     }
 }
 
@@ -415,7 +398,7 @@ function makeOrder(app) {
 }
 
 function quit(agent) {
-    agent.add('Ok, I was thinking of fall in love. See your later');
+    agent.add('Hẹn gặp lại');
 }
 
 function defaultFallback(agent) {
