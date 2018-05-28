@@ -6,12 +6,14 @@ const HOST_OPEN_WEATHER = 'http://api.openweathermap.org/data/2.5/weather';
 const WEATHER_LOCATION_ID = '1580578';
 const OPEN_WEATHER_APP_ID = '4087bd8be866da223189a20f0d3e2f55';
 const AUTHENTICATION_ECOM_SERVER = 'Basic a3l0aHVhdEBraW1zb250aWVuLmNvbTpDaG90cm9ubmllbXZ1aTE=';
+const AUTHENTICATION_IOT_SERVER = 'Basic a3l0aHVhdEBraW1zb250aWVuLmNvbTpDaG90cm9ubmllbXZ1aTE=';
+const HOST_IOT = 'http://mhome-showroom.ddns.net/api';
 
 
 class ExtentionAPIs {
 
 
-    
+
     constructor() {
 
     }
@@ -62,7 +64,7 @@ class ExtentionAPIs {
         });
     }
 
-    changeDevice (id, action) {
+    changeDevice(id, action) {
         var options = {
             qs: {
                 'deviceID': id, // -> uri + '?access_token=xxxxx%20xxxxx'
@@ -76,13 +78,17 @@ class ExtentionAPIs {
 
         return new Promise(function (resolve, reject) {
             rxhttp.get(HOST_IOT + "/callAction", options).subscribe(
-                (data) => resolve(data.response.statusCode),
-                (err) => reject("Error")
+                (data) => {
+                    resolve(data.response.statusCode);
+                },
+                (err) => {
+                    reject("Error");
+                }
             );
         });
     }
 
-    changeScene (id, action) {
+    changeScene(id, action) {
         var options = {
             qs: {
                 'id': id,
@@ -100,9 +106,9 @@ class ExtentionAPIs {
                 (err) => reject("Error")
             );
         });
-        
+
     }
-    
+
 }
 
 function _parseWeatherResponse(response) {

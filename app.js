@@ -1,5 +1,7 @@
 'use strict';
 
+// https://smarthome-control.herokuapp.com/
+
 // Enable actions client library debugging
 process.env.DEBUG = 'actions-on-google:*';
 
@@ -313,8 +315,12 @@ function turnOffDevice(agent) {
     var id = findDeviceId(dname);
     if (id) {
         return externalApis.changeDevice(id, TURNOFF_ACTION)
-            .then(data => agent.add(dname + ' đã được tắt'))
-            .catch(err => agent.add('Xãy ra lỗi khi tắt thiết bị'));
+            .then(data => {
+                agent.add(dname + ' đã được tắt');
+            })
+            .catch(err => {
+                agent.add('Xãy ra lỗi khi tắt thiết bị');
+            });
     } else {
         agent.add('Không tìm thấy ' + dname + '.');
     }
