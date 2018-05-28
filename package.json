@@ -24,6 +24,7 @@
     "mqtt": "^2.17.0",
     "promise": "^8.0.1",
     "rx-http-request": "^1.2.0",
-    "sprintf-js": "^1.0.3"
+    "sprintf-js": "^1.0.3",
+    "ejs": "~1.0.0"
   }
 }

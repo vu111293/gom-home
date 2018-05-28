@@ -236,6 +236,23 @@ function startListeners() {
 }
 
 
+// Render html
+agent.get('/device',function(req,res){
+    res.render('list.html', {demo: "Device list", results: deviceList.map(item => item.nameList[0])})
+ });
+
+ agent.get('/scene',function(req,res){
+    res.render('list.html', {demo: "Scane list", results: sceneList.map(item => item.nameList[0])})
+ });
+
+require('./router/main')(agent);
+agent.set('views',__dirname + '/views');
+agent.set('view engine', 'ejs');
+agent.engine('html', require('ejs').renderFile);
+
+
+
+
 // Start the server
 var server = agent.listen(agent.get('port'), function () {
     console.log('App host %s', server.address().address);
